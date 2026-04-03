@@ -16,6 +16,28 @@ This directory is the environment entrypoint layer for Terraform modules in [ter
 1. Copy `dev/inputs.hcl.example` to `dev/inputs.hcl`.
 2. Fill in the real `vpc_id`, `admin_cidr`, `subnet_ids_by_az`, `ami_id`, and `key_name`.
    - If the account cannot create bootstrap security groups, pre-create them and set both `existing_server_security_group_id` and `existing_worker_shared_security_group_id`.
+   - CloudShell example:
+     ```bash
+     SERVER_SG_ID=$(aws ec2 create-security-group \
+       --group-name k3s-dev-server-sg \
+       --description "Bootstrap SG for K3S server" \
+       --vpc-id vpc-xxxxxxxxxxxxxxxxx \
+       --query 'GroupId' \
+       --output text)
+
+     WORKER_SG_ID=$(aws ec2 create-security-group \
+       --group-name k3s-dev-worker-shared-sg \
+       --description "Bootstrap SG for shared K3S workers" \
+       --vpc-id vpc-xxxxxxxxxxxxxxxxx \
+       --query 'GroupId' \
+       --output text)
+     ```
+   - Add ingress rules only. Do not modify outbound rules in the training account.
+   - Then set:
+     ```hcl
+     existing_server_security_group_id        = "sg-xxxxxxxxxxxxxxxxx"
+     existing_worker_shared_security_group_id = "sg-xxxxxxxxxxxxxxxxx"
+     ```
 3. Review optional baseline inputs:
    - `primary_az`
    - `instance_type`

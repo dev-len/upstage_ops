@@ -62,9 +62,56 @@
    export TG_DOWNLOAD_DIR="/tmp/.terragrunt-cache"
    export TF_PLUGIN_CACHE_DIR="/tmp/.terraform-plugin-cache"
    ```
-2. `terragrunt/dev`에서 `terragrunt plan`을 실행한다.
-3. 결과를 검토한다.
-4. 수동 승인 후 `terragrunt apply`를 실행한다.
+2. 학습 계정에서 SG bootstrap 생성이 막히면, server SG와 worker-shared SG를 먼저 수동으로 만든다.
+   ```bash
+   SERVER_SG_ID=$(aws ec2 create-security-group \
+     --group-name k3s-dev-server-sg \
+     --description "Bootstrap SG for K3S server" \
+     --vpc-id vpc-xxxxxxxxxxxxxxxxx \
+     --query 'GroupId' \
+     --output text)
+
+   WORKER_SG_ID=$(aws ec2 create-security-group \
+     --group-name k3s-dev-worker-shared-sg \
+     --description "Bootstrap SG for shared K3S workers" \
+     --vpc-id vpc-xxxxxxxxxxxxxxxxx \
+     --query 'GroupId' \
+     --output text)
+   ```
+3. 두 SG에 필요한 inbound rule만 추가한다.
+   ```bash
+   aws ec2 authorize-security-group-ingress --group-id "$SERVER_SG_ID" --ip-permissions \
+   "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=203.0.113.10/32,Description=\"SSH from admin\"}]"
+
+   aws ec2 authorize-security-group-ingress --group-id "$WORKER_SG_ID" --ip-permissions \
+   "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=203.0.113.10/32,Description=\"SSH from admin\"}]"
+
+   aws ec2 authorize-security-group-ingress --group-id "$SERVER_SG_ID" --ip-permissions \
+   "IpProtocol=tcp,FromPort=6443,ToPort=6443,IpRanges=[{CidrIp=203.0.113.10/32,Description=\"K3S API from admin\"}]"
+
+   aws ec2 authorize-security-group-ingress --group-id "$SERVER_SG_ID" --ip-permissions \
+   "IpProtocol=tcp,FromPort=6443,ToPort=6443,UserIdGroupPairs=[{GroupId=$WORKER_SG_ID,Description=\"K3S API from shared worker nodes\"}]"
+
+   aws ec2 authorize-security-group-ingress --group-id "$SERVER_SG_ID" --ip-permissions \
+   "IpProtocol=udp,FromPort=8472,ToPort=8472,UserIdGroupPairs=[{GroupId=$SERVER_SG_ID,Description=\"Flannel VXLAN from server nodes\"},{GroupId=$WORKER_SG_ID,Description=\"Flannel VXLAN from shared worker nodes\"}]"
+
+   aws ec2 authorize-security-group-ingress --group-id "$WORKER_SG_ID" --ip-permissions \
+   "IpProtocol=udp,FromPort=8472,ToPort=8472,UserIdGroupPairs=[{GroupId=$SERVER_SG_ID,Description=\"Flannel VXLAN from server nodes\"},{GroupId=$WORKER_SG_ID,Description=\"Flannel VXLAN from shared worker nodes\"}]"
+
+   aws ec2 authorize-security-group-ingress --group-id "$SERVER_SG_ID" --ip-permissions \
+   "IpProtocol=tcp,FromPort=10250,ToPort=10250,UserIdGroupPairs=[{GroupId=$SERVER_SG_ID,Description=\"Kubelet from server nodes\"},{GroupId=$WORKER_SG_ID,Description=\"Kubelet from shared worker nodes\"}]"
+
+   aws ec2 authorize-security-group-ingress --group-id "$WORKER_SG_ID" --ip-permissions \
+   "IpProtocol=tcp,FromPort=10250,ToPort=10250,UserIdGroupPairs=[{GroupId=$SERVER_SG_ID,Description=\"Kubelet from server nodes\"},{GroupId=$WORKER_SG_ID,Description=\"Kubelet from shared worker nodes\"}]"
+   ```
+4. `terragrunt/dev/inputs.hcl`에 기존 SG ID를 넣는다.
+   ```hcl
+   existing_server_security_group_id        = "sg-xxxxxxxxxxxxxxxxx"
+   existing_worker_shared_security_group_id = "sg-xxxxxxxxxxxxxxxxx"
+   ```
+5. `terragrunt/dev`에서 `terragrunt plan`을 실행한다.
+6. 결과를 검토한다.
+7. 수동 승인 후 `terragrunt apply`를 실행한다.
 
 주의:
 
@@ -73,6 +120,7 @@
 - `TERRAGRUNT_DOWNLOAD`는 deprecated 경고가 있으므로 `TG_DOWNLOAD_DIR`를 사용한다
 - remote backend 가능 여부는 IAM 제약 확인 후 결정
 - 기본 VPC와 기존 서브넷은 입력값으로만 사용한다
+- 현재 학습 계정에서는 outbound 규칙 삭제가 불가하므로, bootstrap SG는 기본 outbound를 그대로 둔다
 
 ### 4. K3S bootstrap
 
