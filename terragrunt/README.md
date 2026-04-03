@@ -23,7 +23,15 @@ This directory is the environment entrypoint layer for Terraform modules in [ter
    - `root_volume_type`
    - `db_*`, `llm_obs_*`, `clickhouse_*` storage inputs
    - `node_definitions` if logical node names or placement must change
-3. Run Terragrunt from `terragrunt/dev`.
+3. In AWS CloudShell, move cache paths to `/tmp` before running validation or plan:
+   ```bash
+   mkdir -p /tmp/.terragrunt-cache
+   mkdir -p /tmp/.terraform-plugin-cache
+
+   export TG_DOWNLOAD_DIR="/tmp/.terragrunt-cache"
+   export TF_PLUGIN_CACHE_DIR="/tmp/.terraform-plugin-cache"
+   ```
+4. Run Terragrunt from `terragrunt/dev`.
 
 ## Notes
 
@@ -31,4 +39,6 @@ This directory is the environment entrypoint layer for Terraform modules in [ter
 - Existing VPC and subnets are treated as inputs, not managed resources.
 - `terragrunt/dev/terragrunt.hcl` merges root defaults with `inputs.hcl`.
 - `terraform.source` uses `../../terraform//environments/dev` so Terragrunt copies the whole `terraform/` tree and relative module paths remain valid in cache.
+- Use `terragrunt hclfmt --check` for HCL format validation.
+- In CloudShell, prefer `TG_DOWNLOAD_DIR` over deprecated `TERRAGRUNT_DOWNLOAD`.
 - Validation and review expectations are defined in [validation-baseline.md](/Users/len/Desktop/project/k8s/docs/tasks/validation-baseline.md).

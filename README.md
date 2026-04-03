@@ -55,6 +55,13 @@
 실제 AWS 실행은 CloudShell 기준으로 잡는다.
 
 1. 필요한 바이너리와 cache 위치를 준비한다.
+   ```bash
+   mkdir -p /tmp/.terragrunt-cache
+   mkdir -p /tmp/.terraform-plugin-cache
+
+   export TG_DOWNLOAD_DIR="/tmp/.terragrunt-cache"
+   export TF_PLUGIN_CACHE_DIR="/tmp/.terraform-plugin-cache"
+   ```
 2. `terragrunt/dev`에서 `terragrunt plan`을 실행한다.
 3. 결과를 검토한다.
 4. 수동 승인 후 `terragrunt apply`를 실행한다.
@@ -62,6 +69,8 @@
 주의:
 
 - 장시간 실행은 `tmux` 사용
+- CloudShell 용량 문제를 피하기 위해 Terragrunt/Terraform cache는 `/tmp` 아래를 우선 사용한다
+- `TERRAGRUNT_DOWNLOAD`는 deprecated 경고가 있으므로 `TG_DOWNLOAD_DIR`를 사용한다
 - remote backend 가능 여부는 IAM 제약 확인 후 결정
 - 기본 VPC와 기존 서브넷은 입력값으로만 사용한다
 

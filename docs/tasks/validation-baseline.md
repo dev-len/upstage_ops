@@ -36,6 +36,8 @@
   - 장시간 실행 시 `tmux` 또는 분할 실행 필요성
 - 주의할 것:
   - provider cache 및 state 저장 위치
+  - `/tmp/.terragrunt-cache`, `/tmp/.terraform-plugin-cache` 사용 여부
+  - `TG_DOWNLOAD_DIR` 사용 여부
   - remote backend 사용 가능 여부
   - 인증/권한 부족 시 plan/apply 차단 가능성
 

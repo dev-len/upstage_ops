@@ -43,7 +43,19 @@
 - 주의:
   - 장시간 실행은 `tmux` 사용
   - `$HOME` 저장소와 provider cache 관리 필요
+  - provider download/cache는 `/tmp/.terragrunt-cache`, `/tmp/.terraform-plugin-cache` 사용을 우선한다
+  - `TG_DOWNLOAD_DIR`를 사용하고 deprecated `TERRAGRUNT_DOWNLOAD`는 새 설정에 쓰지 않는다
   - 세션 만료와 권한 부족을 감안해 모듈 단위 재실행 가능 구조 유지
+
+권장 예시:
+
+```bash
+mkdir -p /tmp/.terragrunt-cache
+mkdir -p /tmp/.terraform-plugin-cache
+
+export TG_DOWNLOAD_DIR="/tmp/.terragrunt-cache"
+export TF_PLUGIN_CACHE_DIR="/tmp/.terraform-plugin-cache"
+```
 
 ## 3. 권장 운영 흐름
 
