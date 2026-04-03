@@ -31,6 +31,7 @@
   - PR에서 변경 영향 요약 제공
 - 주의:
   - AWS credentials, backend, provider 설치가 준비되지 않으면 `plan`은 `blocked` 또는 skip 처리
+  - `terragrunt/dev/inputs.hcl`은 예시 파일을 복사해 생성하되, placeholder 값 그대로면 실제 plan 성공을 기대하지 않는다
 
 ### CloudShell
 
@@ -49,6 +50,7 @@
 1. 개발자는 `terragrunt/dev` 기준으로 변경을 준비한다.
 2. PR에서 GitHub Actions가 `fmt`와 `validate`를 실행한다.
 3. AWS credentials와 backend가 준비된 경우에만 `plan`을 시도한다.
+   - placeholder 입력으로는 validate 중심으로 보고, plan 실패는 `blocked`로 기록한다.
 4. PR에는 수행한 검증과 `blocked` 검증을 같이 남긴다.
 5. 승인 후 운영자는 CloudShell에서 `terragrunt plan`을 재검증한다.
 6. 사람이 확인한 뒤 `terragrunt apply`를 수행한다.

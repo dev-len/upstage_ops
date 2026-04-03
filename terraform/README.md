@@ -19,8 +19,22 @@ Related docs:
 
 - `modules/security-groups`
   - Reusable K3S server/worker security groups for initial validation
+- `modules/ec2-k3s-nodes`
+  - Role-aware EC2 baseline for the 7-node topology
+- `modules/storage`
+  - EBS volume and attachment layer for stateful roles
 - `environments/dev`
-  - Example environment wiring for the security-group module
+  - Dev environment wiring for SG, EC2, and storage baseline modules
+- `../terragrunt.hcl`
+  - Shared Terragrunt root config
+- `../terragrunt/dev/terragrunt.hcl`
+  - Dev environment entrypoint
+- `../bootstrap/k3s`
+  - K3S server/agent bootstrap assets
+- `../deployments/observability`
+  - Observability placement values
+- `../deployments/langfuse`
+  - Langfuse placement values
 
 ## Validation baseline
 
@@ -62,6 +76,20 @@ The current Terraform code does not model the full 7-node topology yet.
   - ingress exposure rules (`80/443`)
 
 This is intentional. The repository is currently at the "prove network and K3S baseline safely inside account limits" stage.
+
+Current contracts exposed from the dev environment include:
+
+- `server_security_group_id`
+- `worker_shared_security_group_id`
+- `k3s_instance_ids_by_name`
+- `k3s_private_ips_by_name`
+- `k3s_public_ips_by_name`
+- `k3s_node_roles_by_name`
+- `k3s_node_names_by_role`
+- `k3s_server_endpoint`
+- `storage_volume_ids_by_role`
+- `storage_attachment_ids_by_role`
+- `storage_device_names_by_role`
 
 ## Next step
 

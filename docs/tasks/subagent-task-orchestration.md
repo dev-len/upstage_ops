@@ -24,6 +24,19 @@
 - 각 task는 가능한 한 독립적으로 진행하되, 공통 인터페이스를 문서 기준으로 먼저 맞춘다.
 - 전체 lane 분해와 dispatch 준비에는 로컬 skill `parallel-infra-orchestrator`를 기본 orchestration skill로 사용한다.
 
+## 1.1 현재 구현 기준선
+
+현재 저장소에는 아래 기준선이 이미 반영되어 있다.
+
+- `T1`: Terragrunt root/dev entrypoint
+- `T2`: `server + worker-shared` SG bootstrap 정리
+- `T3`: 7노드 EC2 baseline 모듈과 dev wiring
+- `T4`: `volume_definitions` 기반 storage 모듈과 dev wiring
+- `T5`: `bootstrap/k3s` 아래 server/agent bootstrap 자산
+- `T6`: `deployments/observability`, `deployments/langfuse` values
+- `T7`: 공통 검증/보안/리뷰 기준 문서
+- `T8`: IaC pipeline 문서와 GitHub Actions skeleton
+
 ## 2. 병렬 실행 규칙
 
 ### 2.1 공통 규칙
@@ -222,12 +235,14 @@
   - `terraform/modules/storage/*`
   - `terraform/environments/dev/*`
 - 입력:
+  - `volume_definitions`
   - 역할별 volume size/type
   - 대상 instance ID
   - AZ
 - 출력:
-  - volume IDs
-  - attachment 정보
+  - `volume_ids_by_role`
+  - `attachment_ids_by_role`
+  - `device_names_by_role`
 - 완료 기준:
   - 영속 스토리지 대상 역할이 코드로 분리된다.
   - AZ/instance 연계 오류가 없도록 인터페이스가 단순하다.
@@ -255,8 +270,10 @@
   - join token 또는 전달 방식
   - 역할별 노드 목록
 - 출력:
-  - 클러스터 bootstrap 절차
+  - `bootstrap/k3s/server-init.sh`
+  - `bootstrap/k3s/agent-init.sh`
   - 역할별 라벨링 규칙
+  - 역할별 taint 규칙
 - 완료 기준:
   - 7노드 역할 분리를 위한 node labeling 전략이 문서/스크립트에 반영된다.
   - bootstrap 책임과 Terraform 책임이 분리된다.
@@ -284,8 +301,8 @@
   - storage class 또는 host/device 전략
   - 도메인/ingress 정책
 - 출력:
-  - observability 배치 파일
-  - Langfuse 배치 파일
+  - `deployments/observability/*`
+  - `deployments/langfuse/*`
 - 완료 기준:
   - Metrics/Logs/Traces/Langfuse 각 계층의 배치 책임이 분리된다.
   - DB, ClickHouse, Langfuse가 목표 노드 역할에 맞게 스케줄된다.

@@ -151,8 +151,8 @@
 | T2 | `terraform fmt -check`, `terraform validate` | `checkov -d .`, `trivy config .` | SG 규칙과 변수 검증 포함 |
 | T3 | `terraform fmt -check`, `terraform validate` | `terraform plan` | EC2 리소스/출력 일치성 확인 |
 | T4 | `terraform fmt -check`, `terraform validate` | `terraform plan` | EBS attachment와 AZ 의존성 확인 |
-| T5 | YAML / script syntax check | `kubectl apply --dry-run=client` | bootstrap script와 K3S 절차 검토 |
-| T6 | YAML / Helm lint | `helm template`, `kubectl diff` | observability와 Langfuse 배치 검토 |
+| T5 | shell syntax check | 런타임 bootstrap 검증 | `bootstrap/k3s/*.sh`, env 계약, label/taint 절차 검토 |
+| T6 | YAML / Helm lint | `helm template`, `kubectl diff` | `deployments/observability/*`, `deployments/langfuse/*` 검토 |
 | T7 | 문서 일치성 점검 | 리뷰 체크리스트 적용 | 이 문서가 산출물 |
 | T8 | `terraform fmt -check`, `terraform validate` | `terragrunt plan`, pipeline dry-run | CloudShell / GitHub Actions 경계 확인 |
 
