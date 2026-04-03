@@ -143,7 +143,7 @@
 - 자동 build 및 deploy를 위한 기본 파이프라인 구조 정의
 - Prometheus, Loki, Tempo, Grafana 기반 observability 스택 구축
 - OpenTelemetry Collector 기반 로그/트레이스 수집 구조 구축
-- Langfuse + PostgreSQL 셀프 호스팅 구조 정의 및 배포 준비
+- Langfuse 저장소 스택(PostgreSQL, ClickHouse, Redis) 구조 정의 및 배포 준비
 - Envoy AI Gateway 도입 가능성 및 배치 위치 검토
 
 ### 후속 단계 범위
@@ -168,9 +168,9 @@
 | 노드 역할 | 수량 | 워크로드 | 비고 |
 |-----------|------|----------|------|
 | Server | 1대 | K3S 컨트롤 플레인 (etcd, API Server, Scheduler) | 필수 |
-| Agent: App | 1대~ | 애플리케이션 서비스 (Next.js / FastAPI) | 서비스 스택 확정 후 조정 |
+| Agent: App | 1대~ | 애플리케이션 서비스 (Next.js / React + FastAPI) | 서비스 스택 확정 후 조정 |
 | Agent: Obs | 1대 | 관측 스택 (Prometheus, Grafana, Loki, Tempo, OTel) | 리소스 격리 목적 |
-| Agent: DB | 1대 | PostgreSQL (Langfuse용) | 영속 볼륨 필요 |
+| Agent: DB | 1대 | PostgreSQL (App + Langfuse metadata), ClickHouse, Redis | 초기에는 공용 저장소 노드로 운영 |
 | Agent: LLM-Obs | 1대 | Langfuse | 메모리 512MB+ 예상 |
 
 > 최종 노드 수는 서비스 스택 확정 후 조정한다. 최소 서버 1 + 에이전트 2~3에서 시작.
@@ -208,7 +208,9 @@
 ### LLM Observability
 
 - Langfuse를 셀프 호스팅한다
-- Langfuse 데이터 저장소로 PostgreSQL을 사용한다
+- Langfuse 저장소 스택은 PostgreSQL, ClickHouse, Redis를 기준으로 한다
+- 초기안으로 애플리케이션 DB와 Langfuse metadata는 동일 PostgreSQL 인스턴스를 공유할 수 있다
+- 단, 앱 DB와 Langfuse metadata는 데이터베이스/사용자/권한을 분리하여 운영한다
 - 인프라 트레이스와 LLM 호출 추적은 함께 운영하되, 도구 역할은 분리한다
 
 ## 단계별 실행 계획
@@ -273,7 +275,8 @@
 ### Phase 7. 앱 계측 및 LLM Observability
 
 - 서비스 스택별 OTel 계측 방식을 선택한다
-- Langfuse와 PostgreSQL 배포 위치를 확정한다
+- 애플리케이션용 PostgreSQL과 Langfuse 저장소 스택(PostgreSQL, ClickHouse, Redis) 배치 전략을 확정한다
+- 공용 PostgreSQL 인스턴스를 사용할 경우 DB/사용자/권한 분리 방식을 정한다
 - 앱 계측, 인프라 트레이스, LLM trace 간 관계를 정리한다
 
 > **완료 기준**: Langfuse UI에서 LLM 호출 trace가 조회되고, Grafana에서 앱 트레이스가 확인되는 상태
@@ -289,7 +292,7 @@
 
 | # | 기준 | 검증 방법 |
 |---|------|-----------|
-| 1 | Terraform으로 AWS 인프라를 재현 가능하게 프로비저닝할 수 있다 | `terraform destroy` → `terraform apply`로 재구축 성공 |
+| 1 | Terraform으로 AWS 인프라를 반복 적용 가능한 형태로 관리할 수 있다 | `terraform plan`/`apply` 반복 실행 시 핵심 리소스 구성이 일관되게 유지됨 |
 | 2 | K3S 멀티 노드 클러스터가 정상 동작한다 | `kubectl get nodes` 전체 노드 `Ready` 상태 |
 | 3 | 샘플 애플리케이션을 클러스터에 배포할 수 있다 | nginx 또는 httpbin 컨테이너가 정상 응답 |
 | 4 | 서비스 개발 후 정해진 경로로 배포 가능하다 | 배포 매니페스트 적용 시 추가 수작업 불필요 |
@@ -315,7 +318,9 @@
   - 멀티 노드 환경에서의 이미지 배포 워크플로우 구체화
   - 롤백 전략 정의
 - self-hosted private registry 도입 시점 결정
-- Langfuse용 PostgreSQL 영속 볼륨 전략 결정
+- 애플리케이션 PostgreSQL과 Langfuse metadata를 같은 PostgreSQL 인스턴스로 공유할지 최종 확정
+- Langfuse 저장소 스택(PostgreSQL, ClickHouse, Redis) 영속 볼륨 전략 결정
+- 공용 PostgreSQL 사용 시 리소스 경쟁과 장애 전파 허용 범위 정의
 - Prometheus, Loki, Tempo 데이터 보존 정책(Retention) 결정
 - Stateful 워크로드(Prometheus TSDB, Loki chunks) 영속 볼륨 전략 결정
 - Grafana 대시보드 범위 결정
