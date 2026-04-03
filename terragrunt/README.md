@@ -15,7 +15,7 @@ This directory is the environment entrypoint layer for Terraform modules in [ter
 
 1. Copy `dev/inputs.hcl.example` to `dev/inputs.hcl`.
 2. Fill in the real `vpc_id`, `admin_cidr`, `subnet_ids_by_az`, `ami_id`, and `key_name`.
-   - If the account cannot create bootstrap security groups, pre-create them and set both `existing_server_security_group_id` and `existing_worker_shared_security_group_id`.
+   - If the account cannot create bootstrap security groups, pre-create them and set `existing_server_security_group_id`, `existing_worker_shared_security_group_id`, and `existing_bastion_security_group_id`.
    - CloudShell example:
      ```bash
      SERVER_SG_ID=$(aws ec2 create-security-group \
@@ -42,6 +42,11 @@ This directory is the environment entrypoint layer for Terraform modules in [ter
    - `primary_az`
    - `instance_type`
    - `associate_public_ip_address`
+   - `enable_bastion`
+   - `bastion_instance_type`
+   - `bastion_subnet_id`
+   - `bastion_associate_public_ip_address`
+   - `bastion_key_name`
    - `enable_storage`
    - `root_volume_size_gb`
    - `root_volume_type`
@@ -67,7 +72,8 @@ This directory is the environment entrypoint layer for Terraform modules in [ter
 - Use `terragrunt hclfmt --check` for HCL format validation.
 - In CloudShell, prefer `TG_DOWNLOAD_DIR` over deprecated `TERRAGRUNT_DOWNLOAD`.
 - In the training account, bootstrap security-group outbound must be left unmanaged because any Terraform-managed egress update triggers `ec2:RevokeSecurityGroupEgress`, which is denied by policy.
-- The bootstrap SG module therefore ignores `egress` drift on create/update and only manages ingress rules.
+- The bootstrap SG module therefore ignores `egress` drift on create/update and only manages ingress rules when SGs are Terraform-managed.
+- For the learning-account override path, use a manually created bastion SG and let Terraform manage the bastion instance plus bastion->node SSH ingress rules.
 - In the training account, prefer `enable_storage = false` because `ec2:CreateVolume` may also be denied.
 - When storage is disabled, grow the root volume for `db`, `llm_obs`, and `clickhouse` instead of provisioning separate EBS volumes.
 - Validation and review expectations are defined in [validation-baseline.md](/Users/len/Desktop/project/k8s/docs/tasks/validation-baseline.md).

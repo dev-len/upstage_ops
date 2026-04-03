@@ -17,3 +17,8 @@ output "sub_node_security_group_id" {
   description = "Compatibility alias for worker_shared_security_group_id."
   value       = aws_security_group.sub_node.id
 }
+
+output "bastion_security_group_id" {
+  description = "Security group ID for the bastion host."
+  value       = var.enable_bastion ? aws_security_group.bastion[0].id : null
+}

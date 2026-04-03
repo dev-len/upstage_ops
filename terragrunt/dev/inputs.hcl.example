@@ -10,6 +10,7 @@ inputs = {
   # Set both values to reuse pre-created security groups and skip SG creation.
   # existing_server_security_group_id        = "sg-xxxxxxxxxxxxxxxxx"
   # existing_worker_shared_security_group_id = "sg-xxxxxxxxxxxxxxxxx"
+  # existing_bastion_security_group_id       = "sg-xxxxxxxxxxxxxxxxx"
 
   subnet_ids_by_az = {
     us-east-1a = "subnet-xxxxxxxx"
@@ -21,7 +22,10 @@ inputs = {
   }
 
   instance_type               = "t3.medium"
-  associate_public_ip_address = true
+  associate_public_ip_address = false
+  enable_bastion             = true
+  bastion_instance_type      = "t3.micro"
+  bastion_associate_public_ip_address = true
   enable_storage              = false
   root_volume_size_gb         = 16
   root_volume_type            = "gp3"

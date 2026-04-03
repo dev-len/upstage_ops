@@ -28,6 +28,34 @@ resource "aws_security_group" "sub_node" {
   }
 }
 
+resource "aws_security_group" "bastion" {
+  count = var.enable_bastion ? 1 : 0
+
+  name        = "${var.name_prefix}-bastion-sg"
+  description = "Security group for the bastion host"
+  vpc_id      = var.vpc_id
+
+  lifecycle {
+    ignore_changes = [egress]
+  }
+
+  tags = {
+    Name = "${var.name_prefix}-bastion-sg"
+    Role = "bastion"
+  }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "bastion_ssh" {
+  count = var.enable_bastion ? 1 : 0
+
+  security_group_id = aws_security_group.bastion[0].id
+  cidr_ipv4         = var.admin_cidr
+  from_port         = 22
+  to_port           = 22
+  ip_protocol       = "tcp"
+  description       = "SSH from admin"
+}
+
 resource "aws_vpc_security_group_ingress_rule" "main_ssh" {
   security_group_id = aws_security_group.main_node.id
   cidr_ipv4         = var.admin_cidr
@@ -44,6 +72,28 @@ resource "aws_vpc_security_group_ingress_rule" "sub_ssh" {
   to_port           = 22
   ip_protocol       = "tcp"
   description       = "SSH from admin"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "main_ssh_from_bastion" {
+  count = var.enable_bastion ? 1 : 0
+
+  security_group_id            = aws_security_group.main_node.id
+  referenced_security_group_id = aws_security_group.bastion[0].id
+  from_port                    = 22
+  to_port                      = 22
+  ip_protocol                  = "tcp"
+  description                  = "SSH from bastion"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "sub_ssh_from_bastion" {
+  count = var.enable_bastion ? 1 : 0
+
+  security_group_id            = aws_security_group.sub_node.id
+  referenced_security_group_id = aws_security_group.bastion[0].id
+  from_port                    = 22
+  to_port                      = 22
+  ip_protocol                  = "tcp"
+  description                  = "SSH from bastion"
 }
 
 resource "aws_vpc_security_group_ingress_rule" "main_k3s_api_from_sub" {

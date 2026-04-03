@@ -3,6 +3,13 @@ locals {
     var.existing_server_security_group_id != null &&
     var.existing_worker_shared_security_group_id != null
   )
+  bastion_subnet_id = coalesce(var.bastion_subnet_id, var.subnet_ids_by_az[var.primary_az])
+  bastion_key_name  = coalesce(var.bastion_key_name, var.key_name)
+  use_existing_bastion_security_group = (
+    var.enable_bastion &&
+    local.use_existing_security_groups &&
+    var.existing_bastion_security_group_id != null
+  )
 
   root_volume_overrides_by_name = {
     db         = var.db_root_volume_size_gb
@@ -31,13 +38,25 @@ check "security_group_override_pair" {
   }
 }
 
+check "bastion_security_group_override" {
+  assert {
+    condition = (
+      !var.enable_bastion ||
+      !local.use_existing_security_groups ||
+      var.existing_bastion_security_group_id != null
+    )
+    error_message = "existing_bastion_security_group_id is required when enable_bastion is true and server/worker security groups are injected."
+  }
+}
+
 module "security_groups" {
   count  = local.use_existing_security_groups ? 0 : 1
   source = "../../modules/security-groups"
 
-  name_prefix = var.name_prefix
-  vpc_id      = var.vpc_id
-  admin_cidr  = var.admin_cidr
+  name_prefix    = var.name_prefix
+  vpc_id         = var.vpc_id
+  admin_cidr     = var.admin_cidr
+  enable_bastion = var.enable_bastion
 }
 
 module "k3s_nodes" {
@@ -55,6 +74,61 @@ module "k3s_nodes" {
   server_security_group_id        = local.use_existing_security_groups ? var.existing_server_security_group_id : module.security_groups[0].server_security_group_id
   worker_shared_security_group_id = local.use_existing_security_groups ? var.existing_worker_shared_security_group_id : module.security_groups[0].worker_shared_security_group_id
   node_definitions                = local.effective_node_definitions
+}
+
+resource "aws_vpc_security_group_ingress_rule" "existing_server_ssh_from_bastion" {
+  count = local.use_existing_bastion_security_group ? 1 : 0
+
+  security_group_id            = var.existing_server_security_group_id
+  referenced_security_group_id = var.existing_bastion_security_group_id
+  from_port                    = 22
+  to_port                      = 22
+  ip_protocol                  = "tcp"
+  description                  = "SSH from bastion"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "existing_worker_ssh_from_bastion" {
+  count = local.use_existing_bastion_security_group ? 1 : 0
+
+  security_group_id            = var.existing_worker_shared_security_group_id
+  referenced_security_group_id = var.existing_bastion_security_group_id
+  from_port                    = 22
+  to_port                      = 22
+  ip_protocol                  = "tcp"
+  description                  = "SSH from bastion"
+}
+
+resource "aws_instance" "bastion" {
+  count = var.enable_bastion ? 1 : 0
+
+  ami                         = var.ami_id
+  instance_type               = var.bastion_instance_type
+  key_name                    = local.bastion_key_name
+  subnet_id                   = local.bastion_subnet_id
+  associate_public_ip_address = var.bastion_associate_public_ip_address
+  vpc_security_group_ids = [
+    local.use_existing_security_groups ? var.existing_bastion_security_group_id : module.security_groups[0].bastion_security_group_id,
+  ]
+
+  root_block_device {
+    volume_size = var.root_volume_size_gb
+    volume_type = var.root_volume_type
+    encrypted   = true
+  }
+
+  lifecycle {
+    ignore_changes = [
+      tags,
+      tags_all,
+    ]
+  }
+
+  tags = {
+    Name        = "${var.name_prefix}-bastion"
+    Cluster     = var.name_prefix
+    Environment = "dev"
+    Role        = "bastion"
+  }
 }
 
 module "storage" {

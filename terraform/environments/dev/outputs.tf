@@ -18,6 +18,13 @@ output "sub_node_security_group_id" {
   description = "Compatibility alias for worker_shared_security_group_id."
 }
 
+output "bastion_security_group_id" {
+  value = var.enable_bastion ? (
+    local.use_existing_security_groups ? var.existing_bastion_security_group_id : module.security_groups[0].bastion_security_group_id
+  ) : null
+  description = "Security group ID for the bastion host."
+}
+
 output "k3s_instance_ids_by_name" {
   value       = module.k3s_nodes.instance_ids_by_name
   description = "EC2 instance IDs keyed by logical K3S node name."
@@ -76,4 +83,19 @@ output "storage_device_names_by_role" {
 output "k3s_server_endpoint" {
   value       = "https://${module.k3s_nodes.server_private_ip}:6443"
   description = "K3S bootstrap server endpoint for join and kubeconfig wiring."
+}
+
+output "bastion_instance_id" {
+  value       = var.enable_bastion ? aws_instance.bastion[0].id : null
+  description = "EC2 instance ID for the bastion host."
+}
+
+output "bastion_private_ip" {
+  value       = var.enable_bastion ? aws_instance.bastion[0].private_ip : null
+  description = "Private IPv4 address for the bastion host."
+}
+
+output "bastion_public_ip" {
+  value       = var.enable_bastion ? aws_instance.bastion[0].public_ip : null
+  description = "Public IPv4 address for the bastion host."
 }

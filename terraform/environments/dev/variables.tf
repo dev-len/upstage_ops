@@ -48,6 +48,20 @@ variable "existing_worker_shared_security_group_id" {
   }
 }
 
+variable "existing_bastion_security_group_id" {
+  description = "Existing security group ID to use for the bastion host when server and worker security groups are also injected."
+  type        = string
+  default     = null
+
+  validation {
+    condition = (
+      var.existing_bastion_security_group_id == null ||
+      can(regex("^sg-[0-9a-z]+$", var.existing_bastion_security_group_id))
+    )
+    error_message = "existing_bastion_security_group_id must look like an AWS security group ID."
+  }
+}
+
 variable "subnet_ids_by_az" {
   type        = map(string)
   description = "Existing subnet IDs keyed by AZ. Subnets are not created by this configuration."
@@ -80,6 +94,36 @@ variable "instance_type" {
   description = "EC2 instance type used for the baseline nodes."
   type        = string
   default     = "t3.medium"
+}
+
+variable "enable_bastion" {
+  description = "Whether to create a bastion host for SSH access into the private fleet."
+  type        = bool
+  default     = false
+}
+
+variable "bastion_instance_type" {
+  description = "EC2 instance type used for the bastion host."
+  type        = string
+  default     = "t3.micro"
+}
+
+variable "bastion_subnet_id" {
+  description = "Optional subnet ID for the bastion host. Defaults to the primary AZ subnet."
+  type        = string
+  default     = null
+}
+
+variable "bastion_associate_public_ip_address" {
+  description = "Whether the bastion host should receive a public IPv4 address."
+  type        = bool
+  default     = true
+}
+
+variable "bastion_key_name" {
+  description = "Optional key pair name override for the bastion host."
+  type        = string
+  default     = null
 }
 
 variable "enable_storage" {

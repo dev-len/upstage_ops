@@ -5,6 +5,7 @@
 현재 기준선은 다음까지 포함한다.
 
 - `server + worker-shared` Security Group bootstrap
+- bastion SSH entrypoint
 - 7노드 EC2 baseline
 - stateful 역할용 storage baseline
 - K3S bootstrap 스크립트
@@ -35,6 +36,9 @@
    - `primary_az`
    - `instance_type`
    - `associate_public_ip_address`
+   - `enable_bastion`
+   - `bastion_instance_type`
+   - `bastion_associate_public_ip_address`
    - `enable_storage`
    - `root_volume_size_gb`
    - `root_volume_type`
@@ -108,11 +112,14 @@
    ```
 4. `terragrunt/dev/inputs.hcl`에 기존 SG ID를 넣는다.
    ```hcl
-   existing_server_security_group_id        = "sg-xxxxxxxxxxxxxxxxx"
-   existing_worker_shared_security_group_id = "sg-xxxxxxxxxxxxxxxxx"
-   enable_storage                           = false
+    existing_server_security_group_id        = "sg-xxxxxxxxxxxxxxxxx"
+    existing_worker_shared_security_group_id = "sg-xxxxxxxxxxxxxxxxx"
+    existing_bastion_security_group_id       = "sg-xxxxxxxxxxxxxxxxx"
+    associate_public_ip_address              = false
+    enable_bastion                           = true
+    enable_storage                           = false
 
-   db_root_volume_size_gb         = 40
+    db_root_volume_size_gb         = 40
    llm_obs_root_volume_size_gb    = 40
    clickhouse_root_volume_size_gb = 100
    ```
@@ -129,6 +136,7 @@
 - 기본 VPC와 기존 서브넷은 입력값으로만 사용한다
 - 현재 학습 계정에서는 outbound 규칙 삭제가 불가하므로, bootstrap SG는 기본 outbound를 그대로 둔다
 - 현재 학습 계정에서는 `ec2:CreateVolume`도 불가하므로, 별도 EBS 대신 stateful 노드의 root volume 확장 경로를 사용한다
+- bastion을 제외한 private fleet는 public IP 없이 운영하는 것을 기본으로 둔다
 
 ### 4. K3S bootstrap
 
@@ -140,11 +148,15 @@ Terraform 적용 후 K3S bootstrap은 Terraform 밖에서 수행한다.
 
 Terraform 출력 중 아래가 직접 handoff 된다.
 
+- `bastion_public_ip`
+- `bastion_private_ip`
 - `k3s_server_private_ip`
 - `k3s_server_public_ip`
 - `k3s_server_endpoint`
 - `k3s_node_roles_by_name`
 - `k3s_node_names_by_role`
+
+표준 접속 경로는 `local/CloudShell -> bastion -> private nodes`다.
 
 ### 5. Workload 배치
 

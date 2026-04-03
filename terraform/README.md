@@ -18,13 +18,13 @@ Related docs:
 ## Current structure
 
 - `modules/security-groups`
-  - Reusable K3S server/worker security groups for initial validation
+  - Reusable K3S server/worker security groups plus optional bastion security group
 - `modules/ec2-k3s-nodes`
   - Role-aware EC2 baseline for the 7-node topology
 - `modules/storage`
   - Optional EBS volume and attachment layer for stateful roles
 - `environments/dev`
-  - Dev environment wiring for SG, EC2, and storage baseline modules
+  - Dev environment wiring for SG, bastion, EC2, and storage baseline modules
 - `../root.hcl`
   - Shared Terragrunt root config
 - `../terragrunt/dev/terragrunt.hcl`
@@ -67,6 +67,7 @@ If both existing SG IDs are provided, the dev environment skips the SG module an
 
 - `existing_server_security_group_id`
 - `existing_worker_shared_security_group_id`
+- `existing_bastion_security_group_id` when bastion is enabled
 
 ## Current gap vs target architecture
 
@@ -75,6 +76,7 @@ The current Terraform code does not model the full 7-node topology yet.
 - implemented now:
   - server SG
   - worker-shared SG
+  - optional bastion instance and bastion SG path
   - baseline EC2 layout for server/app/metrics/logs-traces/db/llm-obs/clickhouse roles
   - optional EBS volume and attachment layer for db / llm-obs / clickhouse
 - not modeled yet:
@@ -87,12 +89,15 @@ Current contracts exposed from the dev environment include:
 
 - `server_security_group_id`
 - `worker_shared_security_group_id`
+- `bastion_security_group_id`
 - `k3s_instance_ids_by_name`
 - `k3s_private_ips_by_name`
 - `k3s_public_ips_by_name`
 - `k3s_node_roles_by_name`
 - `k3s_node_names_by_role`
 - `k3s_server_endpoint`
+- `bastion_public_ip`
+- `bastion_private_ip`
 - `storage_volume_ids_by_role`
 - `storage_attachment_ids_by_role`
 - `storage_device_names_by_role`
@@ -100,6 +105,8 @@ Current contracts exposed from the dev environment include:
 For the training account, prefer:
 
 - existing SG ID injection for bootstrap networking
+- `enable_bastion = true`
+- bastion as the only public SSH entrypoint
 - `enable_storage = false`
 - larger root volumes for `db`, `llm_obs`, and `clickhouse`
 

@@ -34,3 +34,11 @@ variable "admin_cidr" {
 
   nullable = false
 }
+
+variable "enable_bastion" {
+  description = "Whether to create a bastion security group and allow SSH from it into the server and shared worker groups."
+  type        = bool
+  default     = false
+
+  nullable = false
+}
