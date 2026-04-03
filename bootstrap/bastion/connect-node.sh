@@ -12,6 +12,7 @@ readonly REMOTE_COMMAND="${2:-}"
 readonly AWS_REGION="${AWS_REGION:-us-east-1}"
 readonly CLUSTER_PREFIX="${CLUSTER_PREFIX:-k3s-dev}"
 readonly SSH_USER="${SSH_USER:-ubuntu}"
+readonly SSH_PORT="${SSH_PORT:-22}"
 readonly SSH_IDENTITY_FILE="${SSH_IDENTITY_FILE:-}"
 readonly SSH_EXTRA_ARGS="${SSH_EXTRA_ARGS:-}"
 readonly INSTANCE_NAME_TAG="${CLUSTER_PREFIX}-${NODE_NAME}"
@@ -32,6 +33,7 @@ if [[ -z "$PRIVATE_IP" || "$PRIVATE_IP" == "None" ]]; then
 fi
 
 ssh_args=()
+ssh_args+=("-p" "$SSH_PORT")
 if [[ -n "$SSH_IDENTITY_FILE" ]]; then
   ssh_args+=("-i" "$SSH_IDENTITY_FILE")
 fi

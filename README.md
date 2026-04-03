@@ -137,6 +137,7 @@
 - 현재 학습 계정에서는 outbound 규칙 삭제가 불가하므로, bootstrap SG는 기본 outbound를 그대로 둔다
 - 현재 학습 계정에서는 `ec2:CreateVolume`도 불가하므로, 별도 EBS 대신 stateful 노드의 root volume 확장 경로를 사용한다
 - bastion을 제외한 private fleet는 public IP 없이 운영하는 것을 기본으로 둔다
+- bastion 외부 진입 포트만 `22022`로 바꾸고, private 노드 SSH는 `22`로 유지할 수 있다
 
 ### 4. K3S bootstrap
 

@@ -35,6 +35,19 @@ variable "admin_cidr" {
   nullable = false
 }
 
+variable "bastion_ssh_port" {
+  description = "TCP port used for SSH access from admin into the bastion host."
+  type        = number
+  default     = 22022
+
+  validation {
+    condition     = var.bastion_ssh_port >= 1 && var.bastion_ssh_port <= 65535
+    error_message = "bastion_ssh_port must be a valid TCP port number."
+  }
+
+  nullable = false
+}
+
 variable "enable_bastion" {
   description = "Whether to create a bastion security group and allow SSH from it into the server and shared worker groups."
   type        = bool

@@ -93,6 +93,9 @@ Keep the app nodes untainted and use taints only for infra-isolated roles when n
 When node private IPs are unstable, prefer running the SSH hop from the bastion
 host with the helper scripts in `../bastion/` instead of hardcoding IPs.
 
+The bastion host can use a non-default external SSH port, but the private nodes
+behind the bastion keep the default SSH port `22` unless explicitly changed.
+
 ## Handoff to later lanes
 
 - `T6` consumes the role labels and optional taints when placing observability and Langfuse workloads.

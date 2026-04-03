@@ -20,6 +20,17 @@ variable "admin_cidr" {
   description = "Admin CIDR allowed to SSH into nodes."
 }
 
+variable "bastion_ssh_port" {
+  description = "TCP port used for SSH access into the bastion host."
+  type        = number
+  default     = 22022
+
+  validation {
+    condition     = var.bastion_ssh_port >= 1 && var.bastion_ssh_port <= 65535
+    error_message = "bastion_ssh_port must be a valid TCP port number."
+  }
+}
+
 variable "existing_server_security_group_id" {
   description = "Existing security group ID to use for the K3S bootstrap server node instead of creating one."
   type        = string

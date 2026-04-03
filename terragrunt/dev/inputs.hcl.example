@@ -3,6 +3,7 @@ inputs = {
   name_prefix = "k3s-dev"
   vpc_id      = "vpc-xxxxxxxxxxxxxxxxx"
   admin_cidr  = "203.0.113.10/32"
+  bastion_ssh_port = 22022
   primary_az  = "us-east-1a"
   ami_id      = "ami-xxxxxxxxxxxxxxxxx"
   key_name    = "k3s-dev-key"

@@ -46,6 +46,8 @@ Named helpers:
   - defaults to `k3s-dev`
 - `SSH_USER`
   - defaults to `ubuntu`
+- `SSH_PORT`
+  - defaults to `22`
 - `SSH_IDENTITY_FILE`
   - optional SSH identity file path
 - `SSH_EXTRA_ARGS`
@@ -57,3 +59,4 @@ Named helpers:
 - Node discovery is based on the `Name` tag format `${CLUSTER_PREFIX}-${NODE_NAME}`.
 - If the instance is recreated and its private IP changes, the script still works
   as long as the `Name` tag stays consistent.
+- The scripts assume private nodes keep the default SSH port `22` unless `SSH_PORT` is overridden.

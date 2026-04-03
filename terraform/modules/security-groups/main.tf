@@ -50,8 +50,8 @@ resource "aws_vpc_security_group_ingress_rule" "bastion_ssh" {
 
   security_group_id = aws_security_group.bastion[0].id
   cidr_ipv4         = var.admin_cidr
-  from_port         = 22
-  to_port           = 22
+  from_port         = var.bastion_ssh_port
+  to_port           = var.bastion_ssh_port
   ip_protocol       = "tcp"
   description       = "SSH from admin"
 }

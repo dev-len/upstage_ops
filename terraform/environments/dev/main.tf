@@ -53,10 +53,11 @@ module "security_groups" {
   count  = local.use_existing_security_groups ? 0 : 1
   source = "../../modules/security-groups"
 
-  name_prefix    = var.name_prefix
-  vpc_id         = var.vpc_id
-  admin_cidr     = var.admin_cidr
-  enable_bastion = var.enable_bastion
+  name_prefix      = var.name_prefix
+  vpc_id           = var.vpc_id
+  admin_cidr       = var.admin_cidr
+  bastion_ssh_port = var.bastion_ssh_port
+  enable_bastion   = var.enable_bastion
 }
 
 module "k3s_nodes" {

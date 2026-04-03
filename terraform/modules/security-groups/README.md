@@ -26,6 +26,7 @@ It assumes:
 
 - `vpc_id`
 - `admin_cidr`
+- `bastion_ssh_port` (optional)
 - `name_prefix` (optional)
 - `enable_bastion` (optional)
 
@@ -42,7 +43,8 @@ The `main_node_*` and `sub_node_*` outputs are compatibility aliases for the exp
 
 ## Ports included
 
-- `22/tcp` from `admin_cidr`
+- `bastion_ssh_port/tcp` from `admin_cidr` into `bastion`
+- `22/tcp` from `admin_cidr` into `server` and `worker-shared`
 - `22/tcp` from `bastion` to `server` and `worker-shared` when enabled
 - `6443/tcp` from shared worker nodes to the server node
 - `8472/udp` server<->server, server<->worker-shared, worker-shared<->worker-shared
