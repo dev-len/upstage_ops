@@ -1,9 +1,12 @@
 # security-groups module
 
-This module creates the minimum AWS security groups required for a two-tier K3S layout:
+This module creates the minimum AWS security groups required for an initial two-tier K3S layout:
 
 - `main_node`: K3S server/control plane
 - `sub_node`: K3S agent/worker nodes
+
+This module is intentionally narrower than the current 7-node architecture baseline.
+It is the bootstrap layer for validating K3S communication before role-specific infrastructure is added.
 
 It assumes:
 
@@ -33,6 +36,7 @@ It assumes:
 ## Notes
 
 - This module is enough for initial private-network K3S validation.
+- It is not the final security-group model for the 7-node topology.
 - It does not include `80/443`, NodePort ranges, or HA etcd ports.
+- It does not separate `app`, `metrics`, `logs-traces`, `db`, `llm-obs`, and `clickhouse` worker roles yet.
 - If outbound is later restricted, add explicit egress rules for package install and cluster traffic.
-
