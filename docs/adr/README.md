@@ -76,3 +76,4 @@ YYYY-MM-DD-short-decision.md
 | 005 | [Langfuse v3 저장소 토폴로지 채택](./005-adopt-langfuse-v3-storage-topology.md) | Accepted | 2026-04-03 |
 | 006 | [K3S 7노드 역할 분리 토폴로지 채택](./006-adopt-k3s-seven-node-topology.md) | Accepted | 2026-04-03 |
 | 2026-04-03 | [학습 계정에서 수동 bootstrap SG 주입 경로 채택](./2026-04-03-adopt-manual-bootstrap-sg-in-learning-account.md) | Accepted | 2026-04-03 |
+| 2026-04-04 | [private fleet 운영을 위한 bastion 진입점 채택](./2026-04-04-adopt-bastion-entrypoint-for-private-fleet.md) | Accepted | 2026-04-04 |
