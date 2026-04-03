@@ -13,6 +13,7 @@ Related docs:
 - `../docs/architecture.md`
 - `../docs/network-inventory.md`
 - `../docs/adr/006-adopt-k3s-seven-node-topology.md`
+- `../docs/tasks/validation-baseline.md`
 
 ## Current structure
 
@@ -20,6 +21,19 @@ Related docs:
   - Reusable K3S server/worker security groups for initial validation
 - `environments/dev`
   - Example environment wiring for the security-group module
+
+## Validation baseline
+
+The common validation, security, and review baseline for all lanes lives in:
+
+- `../docs/tasks/validation-baseline.md`
+
+Use that document as the default reference when deciding:
+
+- what must run locally
+- what must run in CloudShell or CI
+- what is blocked by missing binaries or IAM constraints
+- what evidence must be reported in a PR
 
 ## Existing subnet context
 
@@ -32,7 +46,7 @@ The current environment is assumed to have existing subnets in `us-east-1` simil
 - `us-east-1e` -> `172.31.48.0/20`
 - `us-east-1f` -> `172.31.64.0/20`
 
-Subnet IDs are intentionally treated as inputs and must be filled in manually in `terraform.tfvars`.
+Subnet IDs are intentionally treated as inputs and must be filled in manually in `terragrunt/dev/inputs.hcl` or a compatible environment-specific input file.
 
 ## Current gap vs target architecture
 
@@ -40,10 +54,10 @@ The current Terraform code does not model the full 7-node topology yet.
 
 - implemented now:
   - server SG
-  - worker SG
+  - worker-shared SG
+  - baseline EC2 layout for server/app/metrics/logs-traces/db/llm-obs/clickhouse roles
+  - EBS volume and attachment layer for db / llm-obs / clickhouse
 - not modeled yet:
-  - per-role EC2 layout
-  - EBS attachment strategy for DB / ClickHouse / Langfuse
   - role-specific security groups
   - ingress exposure rules (`80/443`)
 
@@ -53,13 +67,13 @@ This is intentional. The repository is currently at the "prove network and K3S b
 
 Use this module first to validate private-network K3S communication with:
 
-- one main node
-- one sub node
+- one server node
+- shared worker nodes
 - existing VPC/subnet placement
 
 After that, expand in this order:
 
-1. add EC2 definitions for the 7-node baseline
-2. decide whether workers keep one shared SG or split by role
-3. add persistent-volume related inputs for DB / ClickHouse / Langfuse nodes
+1. decide whether workers keep one shared SG or split by role
+2. use `../bootstrap/k3s` to install K3S and apply role labels or optional taints
+3. add workload placement manifests and scheduling rules
 4. add ingress-facing rules only after external exposure is confirmed

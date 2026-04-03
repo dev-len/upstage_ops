@@ -1,0 +1,60 @@
+name: iac-plan
+
+on:
+  pull_request:
+    paths:
+      - "terraform/**"
+      - "terragrunt/**"
+      - "terragrunt.hcl"
+      - "docs/tasks/**"
+      - ".github/workflows/iac-plan.yml"
+  workflow_dispatch:
+
+jobs:
+  validate-and-plan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Setup Terragrunt
+        run: |
+          TG_VERSION=0.67.16
+          curl -fsSL -o /usr/local/bin/terragrunt \
+            "https://github.com/gruntwork-io/terragrunt/releases/download/v${TG_VERSION}/terragrunt_linux_amd64"
+          chmod +x /usr/local/bin/terragrunt
+
+      - name: Terraform Fmt Check
+        run: terraform -chdir=terraform fmt -check -recursive
+
+      - name: Terragrunt Hclfmt
+        run: terragrunt hclfmt --check
+
+      - name: Prepare Dev Inputs
+        run: cp terragrunt/dev/inputs.hcl.example terragrunt/dev/inputs.hcl
+
+      - name: Terragrunt Validate
+        working-directory: terragrunt/dev
+        run: terragrunt validate
+
+      - name: Terragrunt Plan
+        working-directory: terragrunt/dev
+        run: |
+          echo "Plan is intentionally best-effort until credentials/backend are finalized."
+          terragrunt plan -no-color || {
+            echo "terragrunt plan is currently allowed to fail in CI when credentials or backend are unavailable."
+            exit 0
+          }
+
+      - name: Apply Policy
+        run: |
+          echo "Apply remains a manual CloudShell step."
+          echo "Do not automate terragrunt apply until IAM/backend capability is confirmed."

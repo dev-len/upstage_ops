@@ -1,0 +1,13 @@
+server:
+  nodeSelector:
+    topology.k3s.io/role: metrics
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: metrics
+      effect: NoSchedule
+
+alertmanager:
+  enabled: false
+
+extraScrapeConfigs: []

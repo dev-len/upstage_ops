@@ -2,6 +2,22 @@ aws_region = "us-east-1"
 name_prefix = "k3s-dev"
 vpc_id = "vpc-xxxxxxxx"
 admin_cidr = "203.0.113.10/32"
+primary_az = "us-east-1a"
+ami_id = "ami-xxxxxxxx"
+key_name = "k3s-dev-key"
+instance_type = "t3.medium"
+associate_public_ip_address = true
+root_volume_size_gb = 16
+root_volume_type = "gp3"
+db_volume_size_gb = 40
+db_volume_type = "gp3"
+db_device_name = "/dev/sdf"
+llm_obs_volume_size_gb = 40
+llm_obs_volume_type = "gp3"
+llm_obs_device_name = "/dev/sdg"
+clickhouse_volume_size_gb = 100
+clickhouse_volume_type = "gp3"
+clickhouse_device_name = "/dev/sdh"
 
 subnet_ids_by_az = {
   us-east-1a = "subnet-xxxxxxxx"
@@ -12,3 +28,29 @@ subnet_ids_by_az = {
   us-east-1f = "subnet-xxxxxxxx"
 }
 
+node_definitions = {
+  server = {
+    role = "server"
+  }
+  app_1 = {
+    role = "app"
+  }
+  app_2 = {
+    role = "app"
+  }
+  metrics = {
+    role = "metrics"
+  }
+  logs_traces = {
+    role = "logs_traces"
+  }
+  db = {
+    role = "db"
+  }
+  llm_obs = {
+    role = "llm_obs"
+  }
+  clickhouse = {
+    role = "clickhouse"
+  }
+}
