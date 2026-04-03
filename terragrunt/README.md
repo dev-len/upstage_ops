@@ -42,4 +42,5 @@ This directory is the environment entrypoint layer for Terraform modules in [ter
 - Use `terragrunt hclfmt --check` for HCL format validation.
 - In CloudShell, prefer `TG_DOWNLOAD_DIR` over deprecated `TERRAGRUNT_DOWNLOAD`.
 - In the training account, bootstrap security-group outbound must be left unmanaged because any Terraform-managed egress update triggers `ec2:RevokeSecurityGroupEgress`, which is denied by policy.
+- The bootstrap SG module therefore ignores `egress` drift on create/update and only manages ingress rules.
 - Validation and review expectations are defined in [validation-baseline.md](/Users/len/Desktop/project/k8s/docs/tasks/validation-baseline.md).

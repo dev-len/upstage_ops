@@ -3,6 +3,10 @@ resource "aws_security_group" "main_node" {
   description = "Bootstrap security group for the K3S server node"
   vpc_id      = var.vpc_id
 
+  lifecycle {
+    ignore_changes = [egress]
+  }
+
   tags = {
     Name = "${var.name_prefix}-main-node-sg"
     Role = "k3s-server-bootstrap"
@@ -13,6 +17,10 @@ resource "aws_security_group" "sub_node" {
   name        = "${var.name_prefix}-sub-node-sg"
   description = "Bootstrap security group shared by K3S worker nodes"
   vpc_id      = var.vpc_id
+
+  lifecycle {
+    ignore_changes = [egress]
+  }
 
   tags = {
     Name = "${var.name_prefix}-sub-node-sg"

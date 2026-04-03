@@ -54,4 +54,5 @@ The `main_node_*` and `sub_node_*` outputs are compatibility aliases for the exp
 - Outbound is intentionally left unmanaged in Terraform during bootstrap.
 - AWS keeps the default allow-all egress rule on new security groups.
 - This is required in the training account because any Terraform-managed egress flow triggers `ec2:RevokeSecurityGroupEgress`, which is explicitly denied.
+- The module uses `lifecycle.ignore_changes = [egress]` so Terraform does not try to reconcile the provider-created default outbound rule.
 - If outbound is later restricted, re-check IAM permissions before making Terraform own bootstrap egress policy.
