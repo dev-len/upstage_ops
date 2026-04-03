@@ -70,6 +70,8 @@ NNN-short-decision.md
 | # | 제목 | 상태 | 날짜 |
 |---|------|------|------|
 | 001 | [텔레메트리 수집 하이브리드 방식 채택](./001-adopt-hybrid-telemetry-collection.md) | Accepted | 2026-04-02 |
-| 002 | [LLM 관측 도구로 Langfuse 선택](./002-select-langfuse-for-llm-observability.md) | Accepted | 2026-04-02 |
-| 003 | [K3S 멀티 노드 풀스택 구성](./003-adopt-k3s-multi-node-topology.md) | Accepted | 2026-04-02 |
+| 002 | [LLM 관측 도구로 Langfuse 선택](./002-select-langfuse-for-llm-observability.md) | Superseded | 2026-04-02 |
+| 003 | [K3S 멀티 노드 풀스택 구성](./003-adopt-k3s-multi-node-topology.md) | Superseded | 2026-04-02 |
 | 004 | [Grafana 단일 시각화 플랫폼 채택](./004-standardize-on-grafana-for-visualization.md) | Accepted | 2026-04-02 |
+| 005 | [Langfuse v3 저장소 토폴로지 채택](./005-adopt-langfuse-v3-storage-topology.md) | Accepted | 2026-04-03 |
+| 006 | [K3S 7노드 역할 분리 토폴로지 채택](./006-adopt-k3s-seven-node-topology.md) | Accepted | 2026-04-03 |

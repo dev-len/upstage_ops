@@ -99,9 +99,9 @@
 - 텔레메트리 수집은 하이브리드 방식 사용
   - 참조: [`ADR-001`](/Users/len/Desktop/project/k8s/docs/adr/001-adopt-hybrid-telemetry-collection.md)
 - LLM 관측 도구는 Langfuse 사용
-  - 참조: [`ADR-002`](/Users/len/Desktop/project/k8s/docs/adr/002-select-langfuse-for-llm-observability.md)
+  - 참조: [`ADR-005`](/Users/len/Desktop/project/k8s/docs/adr/005-adopt-langfuse-v3-storage-topology.md)
 - K3S는 멀티 노드 역할 분리 구조 채택
-  - 참조: [`ADR-003`](/Users/len/Desktop/project/k8s/docs/adr/003-adopt-k3s-multi-node-topology.md)
+  - 참조: [`ADR-006`](/Users/len/Desktop/project/k8s/docs/adr/006-adopt-k3s-seven-node-topology.md)
 - 시각화 플랫폼은 Grafana로 통일
   - 참조: [`ADR-004`](/Users/len/Desktop/project/k8s/docs/adr/004-standardize-on-grafana-for-visualization.md)
 
@@ -165,31 +165,35 @@
 - Terraform 모듈과 Terragrunt 계층으로 VPC, Subnet, Security Group, EC2, EBS를 관리한다
 - Cloud Shell 환경에서 Terragrunt를 실행한다
 - K3S는 서버 1대 + 에이전트 N대 구조로 시작한다
-- 최소 구성은 서버 1 + 에이전트 2~3이며, 서비스 스택 확정 후 노드 수를 조정한다
+- 초기 기준 토폴로지는 7대 역할 분리 구성으로 한다
 
-#### 노드 역할 할당 (ADR-003 기준)
+#### 노드 역할 할당 (ADR-006 기준)
 
 | 노드 역할 | 수량 | 워크로드 | 비고 |
 |-----------|------|----------|------|
 | Server | 1대 | K3S 컨트롤 플레인 (etcd, API Server, Scheduler) | 필수 |
-| Agent: App | 1대~ | 애플리케이션 서비스 (Next.js / React + FastAPI) | 서비스 스택 확정 후 조정 |
-| Agent: Obs | 1대 | 관측 스택 (Prometheus, Grafana, Loki, Tempo, OTel) | 리소스 격리 목적 |
-| Agent: DB | 1대 | PostgreSQL (App + Langfuse metadata), ClickHouse, Redis | 초기에는 공용 저장소 노드로 운영 |
-| Agent: LLM-Obs | 1대 | Langfuse | 메모리 512MB+ 예상 |
+| Agent: App | 2대 | 애플리케이션 서비스 (Next.js / React + FastAPI) | 앱 워크로드 여유 확보 |
+| Agent: Metrics | 1대 | Prometheus, Grafana | 메트릭 수집 및 시각화 전용 |
+| Agent: Logs-Traces | 1대 | Loki, Tempo, OTel Collector | 로그/트레이스 수집 전용 |
+| Agent: DB | 1대 | PostgreSQL (App + Langfuse metadata), Redis | 공용 메타데이터/캐시 저장소 |
+| Agent: LLM-Obs | 1대 | Langfuse | Langfuse Web + Worker |
+| Agent: ClickHouse | 1대 | ClickHouse | Langfuse 분석 저장소 전용 |
 
-> 최종 노드 수는 서비스 스택 확정 후 조정한다. 최소 서버 1 + 에이전트 2~3에서 시작.
+> 초기 구축은 7대 역할 분리 토폴로지를 기준으로 한다.
 
 #### 노드별 리소스 예산 추정 (t3.medium = 2 vCPU, 4GB RAM)
 
 | 노드 역할 | 주요 워크로드 | 예상 메모리 사용 | 여유 |
 |-----------|-------------|-----------------|------|
 | Server | K3S 컨트롤 플레인 (etcd, API Server, Scheduler) | ~1.0~1.5GB | 충분 |
-| Agent: App | 애플리케이션 서비스 | 서비스 스택 확정 후 추정 | - |
-| Agent: Obs | Prometheus + Grafana + Loki + Tempo + OTel Collector | ~2.0~2.5GB | 빠듯함 ⚠️ |
-| Agent: DB | PostgreSQL + ClickHouse + Redis | ~1.7~2.0GB | 빠듯함 ⚠️ |
-| Agent: LLM-Obs | Langfuse | ~0.5~1.0GB | 충분 |
+| Agent: App | 애플리케이션 서비스 | ~0.8~2.0GB | 서비스 스택 확정 후 조정 |
+| Agent: Metrics | Prometheus + Grafana | ~2.0~2.5GB | 빠듯하지만 가능 ⚠️ |
+| Agent: Logs-Traces | Loki + Tempo + OTel Collector | ~1.2~2.3GB | 여유 |
+| Agent: DB | PostgreSQL + Redis | ~0.5~0.8GB | 충분 |
+| Agent: LLM-Obs | Langfuse Web + Worker | ~1.3~2.5GB | 가능 ⚠️ |
+| Agent: ClickHouse | ClickHouse | ~2.0~3.5GB | 튜닝 필요 ⚠️ |
 
-> ⚠️ Obs 및 DB 노드는 리소스 경쟁이 예상된다. Phase 3~4에서 Kubernetes `resource requests/limits`를 반드시 설정하고, 리소스 부족 시 노드 분리를 검토한다.
+> 기존 5노드 가정은 단일 관측 노드와 공용 저장소 노드의 메모리 경쟁이 커서 폐기하고, 관측과 저장소를 분리한 7노드 구성을 기준선으로 사용한다.
 
 ### 네트워크 구조
 
@@ -359,13 +363,12 @@ Phase 1 (착수 전 확인)
 
 - IAM 제한 범위 정확히 파악
 - Cloud Shell에서 Terraform/Terragrunt state 영속성 보장 방법 결정 (`raw tfstate`의 Git 커밋 금지 원칙 포함)
-- EC2 동시 실행 vCPU limit 확인 (4~5대 동시 운영 가능 여부)
+- EC2 동시 실행 vCPU limit 확인 (7대 운영 가능 여부)
 - 도메인 보유 여부 및 DNS 설정 방식 확인
 
 ### 설계 중 확정 필요 (🟡 중요)
 
 - 팀 서비스 스택 확정 (`Next.js` 또는 `React + FastAPI`)
-- 노드 수 최종 확정
 - GitHub Actions에서 VPC 내 EC2 접근 방식 확정 (퍼블릭 IP 직접 접근 vs Self-hosted runner)
 - 자동 build/deploy 구현 방식 확정 (`GitHub Actions + direct transfer`를 초기안으로 검토)
   - 멀티 노드 환경에서의 이미지 배포 워크플로우 구체화

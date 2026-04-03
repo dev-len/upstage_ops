@@ -1,6 +1,7 @@
 # [ADR-002] LLM 관측 도구로 Langfuse 선택
 
-- **상태**: Accepted
+- **상태**: Superseded
+- **대체 ADR**: ADR-005
 - **날짜**: 2026-04-02
 
 ## 맥락 (Context)
