@@ -1,6 +1,6 @@
 # PRD: LLM 서비스 운영 환경 초기 구축
 
-- **문서 상태**: Draft
+- **문서 상태**: Review
 - **작성일**: 2026-04-02
 - **프로젝트 유형**: Ops (인프라 운영 및 자동화)
 - **주요 역할**: DevOps
@@ -11,11 +11,12 @@
 |------|------|-----------|--------|
 | 2026-04-02 | 0.1 | 초안 작성 | - |
 | 2026-04-02 | 0.2 | 보안, 네트워크, 노드 역할, Phase DoD, 성공기준 정량화 보완 | - |
+| 2026-04-03 | 0.3 | 리소스 예산, Cloud Shell 제약 보강, 백업/복구, 알림, Phase 의존관계, 오픈이슈 우선순위 등 리뷰 반영 | - |
 
 ## 문제 정의
 
 팀은 LLM 서비스를 개발하고 운영할 수 있는 실습용 인프라 환경이 필요하다.
-현재는 AWS 학습용 계정 제약이 큰 환경에서, Terraform으로 인프라를 만들고 K3S 기반 멀티 노드 클러스터를 운영하며,
+현재는 AWS 학습용 계정 제약이 큰 환경에서, Terragrunt로 Terraform 인프라를 관리하고 K3S 기반 멀티 노드 클러스터를 운영하며,
 관측(메트릭, 로그, 트레이스)과 LLM 전용 관측까지 포함한 운영 기반을 갖추려 한다.
 
 이 프로젝트의 핵심 문제는 다음과 같다.
@@ -29,7 +30,7 @@
 
 ## 목표
 
-- Terraform으로 AWS 인프라를 프로비저닝할 수 있는 구조를 정의한다
+- Terragrunt로 AWS 인프라를 프로비저닝할 수 있는 구조를 정의한다
 - K3S 멀티 노드 클러스터를 구축하여 역할별 워크로드 분리가 가능하도록 한다
 - 프론트엔드와 백엔드 서비스가 개발되면 바로 배포할 수 있는 애플리케이션 런타임 환경을 준비한다
 - 애플리케이션 변경이 자동 build 및 deploy로 이어지는 기본 배포 자동화 경로를 마련한다
@@ -80,12 +81,15 @@
 | EC2 인스턴스 크기 | `medium`까지 허용 |
 | EC2 인스턴스 수 | 제한 없음 |
 | 운영 OS | Ubuntu 22.04 LTS |
-| Terraform 실행 위치 | AWS Cloud Shell |
+| Terraform/Terragrunt 실행 위치 | AWS Cloud Shell |
 
 ### Cloud Shell 제약
 
 - 세션 종료 후 `$HOME` 외 디렉터리는 초기화된다
-- Terraform 바이너리, provider cache, state 관리 방식에 대한 별도 전략이 필요하다
+- `$HOME` 영속 스토리지는 최대 1GB로 제한된다 (Terraform provider cache, state 등의 용량 관리 필요)
+- 유휴 20분 후 세션이 자동 종료되며, 최대 연속 사용 시간은 12시간이다
+- 장시간 `terragrunt apply` 실행 시 세션 끊김 대비 전략이 필요하다 (`tmux` 사용 또는 모듈 단위 분리 적용)
+- Terraform/Terragrunt 바이너리, provider cache, state 관리 방식에 대한 별도 전략이 필요하다
 - 원격 backend 사용 가능 여부는 IAM 제한 확인이 선행되어야 한다
 
 ## 확정된 결정
@@ -105,7 +109,7 @@
 
 ### 기능 요구사항
 
-- AWS 인프라를 Cloud Shell에서 Terraform으로 프로비저닝할 수 있어야 한다
+- AWS 인프라를 Cloud Shell에서 Terragrunt로 프로비저닝할 수 있어야 한다
 - K3S 서버 1대와 에이전트 N대로 멀티 노드 클러스터를 구성할 수 있어야 한다
 - 앱 워크로드, 관측 스택, DB, LLM observability를 역할별로 분리 배치할 수 있어야 한다
 - 프론트엔드와 백엔드 애플리케이션을 컨테이너 기준으로 배포할 수 있어야 한다
@@ -137,7 +141,7 @@
 
 ### 이번 단계 범위
 
-- Terraform 기반 AWS 인프라 프로비저닝 구조 정의
+- Terragrunt 기반 AWS 인프라 프로비저닝 구조 정의
 - K3S 멀티 노드 클러스터 구축
 - 프론트엔드 및 백엔드 애플리케이션 배포를 위한 클러스터 런타임 환경 준비
 - 자동 build 및 deploy를 위한 기본 파이프라인 구조 정의
@@ -158,8 +162,8 @@
 
 ### 인프라 및 클러스터
 
-- Terraform으로 VPC, Subnet, Security Group, EC2, EBS를 관리한다
-- Cloud Shell 환경에서 Terraform을 실행한다
+- Terraform 모듈과 Terragrunt 계층으로 VPC, Subnet, Security Group, EC2, EBS를 관리한다
+- Cloud Shell 환경에서 Terragrunt를 실행한다
 - K3S는 서버 1대 + 에이전트 N대 구조로 시작한다
 - 최소 구성은 서버 1 + 에이전트 2~3이며, 서비스 스택 확정 후 노드 수를 조정한다
 
@@ -174,6 +178,18 @@
 | Agent: LLM-Obs | 1대 | Langfuse | 메모리 512MB+ 예상 |
 
 > 최종 노드 수는 서비스 스택 확정 후 조정한다. 최소 서버 1 + 에이전트 2~3에서 시작.
+
+#### 노드별 리소스 예산 추정 (t3.medium = 2 vCPU, 4GB RAM)
+
+| 노드 역할 | 주요 워크로드 | 예상 메모리 사용 | 여유 |
+|-----------|-------------|-----------------|------|
+| Server | K3S 컨트롤 플레인 (etcd, API Server, Scheduler) | ~1.0~1.5GB | 충분 |
+| Agent: App | 애플리케이션 서비스 | 서비스 스택 확정 후 추정 | - |
+| Agent: Obs | Prometheus + Grafana + Loki + Tempo + OTel Collector | ~2.0~2.5GB | 빠듯함 ⚠️ |
+| Agent: DB | PostgreSQL + ClickHouse + Redis | ~1.7~2.0GB | 빠듯함 ⚠️ |
+| Agent: LLM-Obs | Langfuse | ~0.5~1.0GB | 충분 |
+
+> ⚠️ Obs 및 DB 노드는 리소스 경쟁이 예상된다. Phase 3~4에서 Kubernetes `resource requests/limits`를 반드시 설정하고, 리소스 부족 시 노드 분리를 검토한다.
 
 ### 네트워크 구조
 
@@ -207,13 +223,41 @@
 
 ### LLM Observability
 
-- Langfuse를 셀프 호스팅한다
-- Langfuse 저장소 스택은 PostgreSQL, ClickHouse, Redis를 기준으로 한다
+- Langfuse v3를 셀프 호스팅한다
+- Langfuse 저장소 스택은 PostgreSQL, ClickHouse, Redis를 기준으로 한다 (v3 아키텍처)
 - 초기안으로 애플리케이션 DB와 Langfuse metadata는 동일 PostgreSQL 인스턴스를 공유할 수 있다
 - 단, 앱 DB와 Langfuse metadata는 데이터베이스/사용자/권한을 분리하여 운영한다
 - 인프라 트레이스와 LLM 호출 추적은 함께 운영하되, 도구 역할은 분리한다
 
 ## 단계별 실행 계획
+
+### Phase 간 의존 관계
+
+```text
+Phase 1 (착수 전 확인)
+  └→ Phase 2 (인프라 기반 준비)
+       └→ Phase 3 (K3S 클러스터 구축)
+            ├→ Phase 4 (Observability) ──┐
+            ├→ Phase 5 (앱 배포 기반)   ──┼→ Phase 7 (앱 계측 & LLM Obs)
+            └→ Phase 6 (AI GW 검토)     │       └→ Phase 8 (후속 고도화)
+                                         │
+                                    (4·5 병렬 가능)
+```
+
+### 예상 소요 기간 (참고)
+
+> 아래는 개략적인 추정이며, 실제 진행 속도는 팀 리소스와 AWS 제약 확인 결과에 따라 달라진다.
+
+| Phase | 예상 기간 | 비고 |
+|-------|----------|------|
+| Phase 1 | 1~2일 | AWS 제약 확인, 서비스 스택 선정 |
+| Phase 2 | 1주 | Terragrunt/Terraform 구조 설계 및 검증 |
+| Phase 3 | 1주 | K3S 클러스터 구축 및 안정화 |
+| Phase 4 | 1~2주 | Observability 스택 (Phase 5와 병렬) |
+| Phase 5 | 1주 | 배포 기반 구성 (Phase 4와 병렬) |
+| Phase 6 | 2~3일 | 문서화 중심 검토 |
+| Phase 7 | 1~2주 | 계측 및 LLM Obs |
+| Phase 8 | 지속 | 후속 고도화 |
 
 ### Phase 1. 착수 전 확인
 
@@ -227,38 +271,44 @@
 
 ### Phase 2. 인프라 기반 준비
 
-- Cloud Shell에서 Terraform을 반복 실행할 수 있는 작업 구조를 정의한다
-- 상태 파일 저장 전략을 결정한다 (S3 불가 시 대안: local state + Git 관리)
+- Cloud Shell에서 Terragrunt를 반복 실행할 수 있는 작업 구조를 정의한다
+- 상태 파일 저장 전략을 결정한다 (S3 backend 불가 시 대안: Cloud Shell `$HOME` 보관 또는 암호화된 별도 저장소 사용, raw tfstate의 Git 커밋은 금지)
 - VPC, 네트워크, EC2, EBS 기반 리소스 구성을 설계한다
 - SSH 접근 방식(직접 접근 vs Bastion) 결정
+- Security Group 포트 매트릭스를 정의한다 (SSH, K3S API, Ingress, kubelet, VXLAN 등)
+- GitHub Actions에서 VPC 내 EC2 접근 방식을 결정한다 (퍼블릭 IP 직접 접근 vs Self-hosted runner)
 
-> **완료 기준**: `terraform plan`이 Cloud Shell에서 성공적으로 실행되고, 리소스 설계 문서가 작성된 상태
+> **완료 기준**: `terragrunt plan`이 Cloud Shell에서 성공적으로 실행되고, 리소스 설계 문서 및 포트 매트릭스가 작성된 상태
 
 ### Phase 3. K3S 클러스터 구축
 
 - 서버 노드와 에이전트 노드 구성 방식을 정한다
 - 역할별 노드 분리 기준을 정리한다 (Taint/Toleration, Node Affinity)
 - 설치 자동화 방식(`user_data` 또는 `cloud-init`)을 정한다
+- 노드별 기본 `resource requests/limits` 정책을 정한다
+- Server 노드(etcd) 스냅샷 백업 주기 및 복원 절차를 정한다
 
-> **완료 기준**: `kubectl get nodes`에서 전체 노드가 `Ready` 상태이고, 역할별 label/taint가 적용된 상태
+> **완료 기준**: `kubectl get nodes`에서 전체 노드가 `Ready` 상태이고, 역할별 label/taint가 적용되며, etcd 스냅샷 백업이 1회 이상 성공한 상태
 
 ### Phase 4. Observability 스택 구축
 
-- Prometheus, Loki, Tempo, Grafana 배포 구조를 정의한다 (Helm chart vs raw manifest 결정 포함)
-- OTel Collector 배포 방식을 정한다 (DaemonSet vs Deployment)
+- Prometheus, Loki, Tempo, Grafana 배포 구조를 정의한다 (Helm chart vs Kustomize 결정 포함)
+- OTel Collector 배포 방식을 정한다 (ADR-001 하이브리드 기준: DaemonSet(로그) + Deployment(트레이스) 조합 검토)
 - Grafana에서 세 신호를 통합 조회할 수 있도록 한다
+- 기본 알림(Alerting) 구조를 구성한다 (노드 다운, Pod CrashLoopBackOff, 디스크 부족 등)
+- 알림 수신 채널을 결정한다 (Slack, Email 등)
 - 데이터 보존 정책(Retention)을 정한다
 
-> **완료 기준**: Grafana에서 메트릭(Prometheus), 로그(Loki), 트레이스(Tempo) 데이터가 각각 조회되는 상태
+> **완료 기준**: Grafana에서 메트릭(Prometheus), 로그(Loki), 트레이스(Tempo) 데이터가 각각 조회되고, 기본 알림 규칙이 1개 이상 동작하는 상태
 >
 > ⚡ Phase 5와 병렬 진행 가능
 
 ### Phase 5. 애플리케이션 배포 기반 구성
 
-- 프론트엔드 및 백엔드 배포 매니페스트 구조를 정한다
+- 프론트엔드 및 백엔드 배포용 Kustomize overlay 구조를 정한다
 - 이미지 build 후 direct transfer 및 node import 경로를 정한다
 - GitHub Actions 기반 자동 배포 구조를 정한다
-- self-hosted private registry 도입 시점을 후속 전략으로 정리한다
+- self-hosted private registry 도입 시점 및 호스팅 위치(별도 EC2 또는 K3S 내 Pod)를 후속 전략으로 정리한다
 - 샘플 애플리케이션(예: nginx 또는 httpbin)을 배포하여 파이프라인을 검증한다
 
 > **완료 기준**: 샘플 앱이 클러스터에 배포되어 외부에서 접근 가능하고, 코드 push 후 자동 빌드/배포 흐름이 1회 이상 성공한 상태
@@ -275,9 +325,11 @@
 ### Phase 7. 앱 계측 및 LLM Observability
 
 - 서비스 스택별 OTel 계측 방식을 선택한다
+- Langfuse v3 기준 배포 방식을 결정한다 (Kubernetes 운영 표면 기준: Helm chart / Kustomize)
 - 애플리케이션용 PostgreSQL과 Langfuse 저장소 스택(PostgreSQL, ClickHouse, Redis) 배치 전략을 확정한다
 - 공용 PostgreSQL 인스턴스를 사용할 경우 DB/사용자/권한 분리 방식을 정한다
 - 앱 계측, 인프라 트레이스, LLM trace 간 관계를 정리한다
+- 인프라 트레이스(OTel → Tempo)와 LLM 트레이스(SDK → Langfuse) 간 `trace_id` 기반 correlation 전략을 검토한다
 
 > **완료 기준**: Langfuse UI에서 LLM 호출 trace가 조회되고, Grafana에서 앱 트레이스가 확인되는 상태
 
@@ -292,39 +344,44 @@
 
 | # | 기준 | 검증 방법 |
 |---|------|-----------|
-| 1 | Terraform으로 AWS 인프라를 반복 적용 가능한 형태로 관리할 수 있다 | `terraform plan`/`apply` 반복 실행 시 핵심 리소스 구성이 일관되게 유지됨 |
+| 1 | Terragrunt로 AWS 인프라를 반복 적용 가능한 형태로 관리할 수 있다 | `terragrunt plan` 결과가 불필요한 변경 없이 유지되고, `terragrunt apply` 2회 이상 반복 실행 시 핵심 리소스 구성이 일관되게 유지됨 |
 | 2 | K3S 멀티 노드 클러스터가 정상 동작한다 | `kubectl get nodes` 전체 노드 `Ready` 상태 |
-| 3 | 샘플 애플리케이션을 클러스터에 배포할 수 있다 | nginx 또는 httpbin 컨테이너가 정상 응답 |
-| 4 | 서비스 개발 후 정해진 경로로 배포 가능하다 | 배포 매니페스트 적용 시 추가 수작업 불필요 |
-| 5 | 코드 변경 이후 자동 build 및 deploy가 동작한다 | Git push 후 새 이미지가 클러스터에 반영 확인 |
-| 6 | Grafana에서 metrics, logs, traces를 조회할 수 있다 | Grafana Data Source 3개 연결 및 데이터 조회 확인 |
+| 3 | 샘플 애플리케이션을 클러스터에 배포할 수 있다 | nginx 또는 httpbin 컨테이너가 정상 응답 (HTTP 200) |
+| 4 | 서비스 개발 후 정해진 경로로 배포 가능하다 | `kubectl apply -k` 또는 동등한 Kustomize 기반 명령으로 배포 완료, 추가 수작업 불필요 |
+| 5 | 코드 변경 이후 자동 build 및 deploy가 동작한다 | Git push 후 새 이미지가 클러스터에 반영 확인 (1회 이상 성공) |
+| 6 | Grafana에서 metrics, logs, traces를 조회할 수 있다 | Grafana Data Source 3개 연결 및 각 30분 이상의 시계열 데이터 조회 확인 |
 | 7 | Langfuse에서 LLM 호출 trace를 확인할 수 있다 | 테스트 LLM 호출 후 Langfuse UI에서 trace 조회 |
-| 8 | 문서만 읽고 팀원이 다음 작업 순서를 이해할 수 있다 | 팀원 워크스루 세션으로 검증 |
+| 8 | 문서만 읽고 팀원이 다음 작업 순서를 이해할 수 있다 | 팀원 1인 이상이 문서만으로 다음 Phase 착수 가능 여부 워크스루로 검증 |
 
 ## 오픈 이슈 및 결정 게이트
 
-### 착수 전 확정 필요
+### 착수 전 확정 필요 (🔴 블로커)
 
 - IAM 제한 범위 정확히 파악
-- Cloud Shell에서 Terraform state 영속성 보장 방법 결정
+- Cloud Shell에서 Terraform/Terragrunt state 영속성 보장 방법 결정 (`raw tfstate`의 Git 커밋 금지 원칙 포함)
+- EC2 동시 실행 vCPU limit 확인 (4~5대 동시 운영 가능 여부)
 - 도메인 보유 여부 및 DNS 설정 방식 확인
 
-### 설계 중 확정 필요
+### 설계 중 확정 필요 (🟡 중요)
 
 - 팀 서비스 스택 확정 (`Next.js` 또는 `React + FastAPI`)
 - 노드 수 최종 확정
+- GitHub Actions에서 VPC 내 EC2 접근 방식 확정 (퍼블릭 IP 직접 접근 vs Self-hosted runner)
 - 자동 build/deploy 구현 방식 확정 (`GitHub Actions + direct transfer`를 초기안으로 검토)
-  - GitHub Actions self-hosted runner 필요 여부 검토 (VPC 내 EC2 접근 문제)
   - 멀티 노드 환경에서의 이미지 배포 워크플로우 구체화
   - 롤백 전략 정의
-- self-hosted private registry 도입 시점 결정
+- self-hosted private registry 도입 시점 및 호스팅 위치 결정
 - 애플리케이션 PostgreSQL과 Langfuse metadata를 같은 PostgreSQL 인스턴스로 공유할지 최종 확정
 - Langfuse 저장소 스택(PostgreSQL, ClickHouse, Redis) 영속 볼륨 전략 결정
 - 공용 PostgreSQL 사용 시 리소스 경쟁과 장애 전파 허용 범위 정의
+- Stateful 워크로드(PostgreSQL, ClickHouse, Prometheus TSDB, Loki chunks) 백업/복구 전략 결정
+- EBS 볼륨 전략 상세 (루트/데이터 분리 여부, DB 노드 용량 적절성, gp3 IOPS 기본값 검토)
 - Prometheus, Loki, Tempo 데이터 보존 정책(Retention) 결정
 - Stateful 워크로드(Prometheus TSDB, Loki chunks) 영속 볼륨 전략 결정
+- 알림(Alerting) 수신 채널 결정 (Slack, Email 등)
 - Grafana 대시보드 범위 결정
 - Grafana 대시보드 JSON Git 관리 방식 결정
+- 로컬 개발 환경에서 클러스터 접근 방식 결정 (kubeconfig 배포, SSH 터널 등)
 
 ### 비용 추정 (참고)
 
@@ -337,10 +394,11 @@
 | 데이터 전송 | 제한적 사용 예상 | - | ~$5 이하 |
 | **합계** | | | **~$130~165/월** |
 
-### 후속 검토 항목
+### 후속 검토 항목 (🟢 일반)
 
 - Envoy AI Gateway 도입 범위 및 배치 방식 검토
 - 일반 ingress와 AI gateway의 역할 분리 방식 정리
+- Langfuse 트레이스와 인프라 트레이스 간 `trace_id` correlation 구현
 
 ### 이미 확정된 항목
 
@@ -359,16 +417,18 @@ k8s/
 │   ├── PRD.md
 │   ├── adr/
 │   └── prompts/
-├── terraform/
-│   ├── environments/
+├── infra/
+│   ├── live/
 │   │   └── dev/
 │   └── modules/
 ├── k3s/
 ├── manifests/
-│   ├── gateway/
-│   ├── observability/
-│   ├── langfuse/
-│   └── apps/
+│   ├── base/
+│   └── overlays/
+│       ├── apps/
+│       ├── gateway/
+│       ├── langfuse/
+│       └── observability/
 └── scripts/
 ```
 
