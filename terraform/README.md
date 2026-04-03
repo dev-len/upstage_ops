@@ -25,7 +25,7 @@ Related docs:
   - EBS volume and attachment layer for stateful roles
 - `environments/dev`
   - Dev environment wiring for SG, EC2, and storage baseline modules
-- `../terragrunt.hcl`
+- `../root.hcl`
   - Shared Terragrunt root config
 - `../terragrunt/dev/terragrunt.hcl`
   - Dev environment entrypoint

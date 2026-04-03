@@ -4,7 +4,7 @@ This directory is the environment entrypoint layer for Terraform modules in [ter
 
 ## Structure
 
-- `../terragrunt.hcl`
+- `../root.hcl`
   - shared Terragrunt defaults and common inputs
 - `dev/terragrunt.hcl`
   - `dev` environment entrypoint
@@ -30,4 +30,5 @@ This directory is the environment entrypoint layer for Terraform modules in [ter
 - Terragrunt composes environments; Terraform still owns resources and module logic.
 - Existing VPC and subnets are treated as inputs, not managed resources.
 - `terragrunt/dev/terragrunt.hcl` merges root defaults with `inputs.hcl`.
+- `terraform.source` uses `../../terraform//environments/dev` so Terragrunt copies the whole `terraform/` tree and relative module paths remain valid in cache.
 - Validation and review expectations are defined in [validation-baseline.md](/Users/len/Desktop/project/k8s/docs/tasks/validation-baseline.md).

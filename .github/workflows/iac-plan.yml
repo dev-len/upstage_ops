@@ -5,7 +5,7 @@ on:
     paths:
       - "terraform/**"
       - "terragrunt/**"
-      - "terragrunt.hcl"
+      - "root.hcl"
       - "docs/tasks/**"
       - ".github/workflows/iac-plan.yml"
   workflow_dispatch:

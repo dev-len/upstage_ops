@@ -136,7 +136,7 @@
   - `executor`
 - 주요 파일:
   - `terraform/`
-  - `terragrunt.hcl`
+  - `root.hcl`
   - `terragrunt/*`
 - 입력:
   - `vpc_id`
