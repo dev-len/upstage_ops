@@ -3,6 +3,22 @@ locals {
     var.existing_server_security_group_id != null &&
     var.existing_worker_shared_security_group_id != null
   )
+
+  root_volume_overrides_by_name = {
+    db         = var.db_root_volume_size_gb
+    llm_obs    = var.llm_obs_root_volume_size_gb
+    clickhouse = var.clickhouse_root_volume_size_gb
+  }
+
+  effective_node_definitions = {
+    for name, definition in var.node_definitions :
+    name => merge(
+      definition,
+      local.root_volume_overrides_by_name[name] != null ? {
+        root_volume_size_gb = local.root_volume_overrides_by_name[name]
+      } : {}
+    )
+  }
 }
 
 check "security_group_override_pair" {
@@ -38,10 +54,11 @@ module "k3s_nodes" {
   root_volume_type                = var.root_volume_type
   server_security_group_id        = local.use_existing_security_groups ? var.existing_server_security_group_id : module.security_groups[0].server_security_group_id
   worker_shared_security_group_id = local.use_existing_security_groups ? var.existing_worker_shared_security_group_id : module.security_groups[0].worker_shared_security_group_id
-  node_definitions                = var.node_definitions
+  node_definitions                = local.effective_node_definitions
 }
 
 module "storage" {
+  count  = var.enable_storage ? 1 : 0
   source = "../../modules/storage"
 
   name_prefix = var.name_prefix

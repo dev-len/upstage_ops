@@ -82,6 +82,12 @@ variable "instance_type" {
   default     = "t3.medium"
 }
 
+variable "enable_storage" {
+  description = "Whether the separate EBS storage module should run for db, llm_obs, and clickhouse roles."
+  type        = bool
+  default     = true
+}
+
 variable "associate_public_ip_address" {
   description = "Whether nodes should receive public IPv4 addresses by default."
   type        = bool
@@ -98,6 +104,24 @@ variable "root_volume_type" {
   description = "Default root EBS volume type."
   type        = string
   default     = "gp3"
+}
+
+variable "db_root_volume_size_gb" {
+  description = "Optional root volume size override in GiB for the db node."
+  type        = number
+  default     = null
+}
+
+variable "llm_obs_root_volume_size_gb" {
+  description = "Optional root volume size override in GiB for the llm_obs node."
+  type        = number
+  default     = null
+}
+
+variable "clickhouse_root_volume_size_gb" {
+  description = "Optional root volume size override in GiB for the clickhouse node."
+  type        = number
+  default     = null
 }
 
 variable "node_definitions" {

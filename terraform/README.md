@@ -22,7 +22,7 @@ Related docs:
 - `modules/ec2-k3s-nodes`
   - Role-aware EC2 baseline for the 7-node topology
 - `modules/storage`
-  - EBS volume and attachment layer for stateful roles
+  - Optional EBS volume and attachment layer for stateful roles
 - `environments/dev`
   - Dev environment wiring for SG, EC2, and storage baseline modules
 - `../root.hcl`
@@ -76,7 +76,7 @@ The current Terraform code does not model the full 7-node topology yet.
   - server SG
   - worker-shared SG
   - baseline EC2 layout for server/app/metrics/logs-traces/db/llm-obs/clickhouse roles
-  - EBS volume and attachment layer for db / llm-obs / clickhouse
+  - optional EBS volume and attachment layer for db / llm-obs / clickhouse
 - not modeled yet:
   - role-specific security groups
   - ingress exposure rules (`80/443`)
@@ -96,6 +96,12 @@ Current contracts exposed from the dev environment include:
 - `storage_volume_ids_by_role`
 - `storage_attachment_ids_by_role`
 - `storage_device_names_by_role`
+
+For the training account, prefer:
+
+- existing SG ID injection for bootstrap networking
+- `enable_storage = false`
+- larger root volumes for `db`, `llm_obs`, and `clickhouse`
 
 ## Next step
 

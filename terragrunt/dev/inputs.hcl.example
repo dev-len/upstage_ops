@@ -22,8 +22,15 @@ inputs = {
 
   instance_type               = "t3.medium"
   associate_public_ip_address = true
+  enable_storage              = false
   root_volume_size_gb         = 16
   root_volume_type            = "gp3"
+
+  # When enable_storage is false in the training account, grow the root disk
+  # for stateful roles instead of provisioning separate EBS volumes.
+  db_root_volume_size_gb         = 40
+  llm_obs_root_volume_size_gb    = 40
+  clickhouse_root_volume_size_gb = 100
 
   db_volume_size_gb         = 40
   db_volume_type            = "gp3"

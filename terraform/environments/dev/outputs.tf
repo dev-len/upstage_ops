@@ -59,17 +59,17 @@ output "k3s_server_public_ip" {
 }
 
 output "storage_volume_ids_by_role" {
-  value       = module.storage.volume_ids_by_role
+  value       = var.enable_storage ? module.storage[0].volume_ids_by_role : {}
   description = "EBS volume IDs keyed by storage role."
 }
 
 output "storage_attachment_ids_by_role" {
-  value       = module.storage.attachment_ids_by_role
+  value       = var.enable_storage ? module.storage[0].attachment_ids_by_role : {}
   description = "EBS volume attachment IDs keyed by storage role."
 }
 
 output "storage_device_names_by_role" {
-  value       = module.storage.device_names_by_role
+  value       = var.enable_storage ? module.storage[0].device_names_by_role : {}
   description = "EBS device names keyed by storage role."
 }
 

@@ -42,8 +42,10 @@ This directory is the environment entrypoint layer for Terraform modules in [ter
    - `primary_az`
    - `instance_type`
    - `associate_public_ip_address`
+   - `enable_storage`
    - `root_volume_size_gb`
    - `root_volume_type`
+   - `db_root_volume_size_gb`, `llm_obs_root_volume_size_gb`, `clickhouse_root_volume_size_gb`
    - `db_*`, `llm_obs_*`, `clickhouse_*` storage inputs
    - `node_definitions` if logical node names or placement must change
 3. In AWS CloudShell, move cache paths to `/tmp` before running validation or plan:
@@ -66,4 +68,6 @@ This directory is the environment entrypoint layer for Terraform modules in [ter
 - In CloudShell, prefer `TG_DOWNLOAD_DIR` over deprecated `TERRAGRUNT_DOWNLOAD`.
 - In the training account, bootstrap security-group outbound must be left unmanaged because any Terraform-managed egress update triggers `ec2:RevokeSecurityGroupEgress`, which is denied by policy.
 - The bootstrap SG module therefore ignores `egress` drift on create/update and only manages ingress rules.
+- In the training account, prefer `enable_storage = false` because `ec2:CreateVolume` may also be denied.
+- When storage is disabled, grow the root volume for `db`, `llm_obs`, and `clickhouse` instead of provisioning separate EBS volumes.
 - Validation and review expectations are defined in [validation-baseline.md](/Users/len/Desktop/project/k8s/docs/tasks/validation-baseline.md).

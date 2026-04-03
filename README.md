@@ -6,7 +6,7 @@
 
 - `server + worker-shared` Security Group bootstrap
 - 7노드 EC2 baseline
-- stateful 역할용 EBS attachment baseline
+- stateful 역할용 storage baseline
 - K3S bootstrap 스크립트
 - observability / Langfuse 배치 values
 - Terragrunt dev entrypoint
@@ -35,8 +35,10 @@
    - `primary_az`
    - `instance_type`
    - `associate_public_ip_address`
+   - `enable_storage`
    - `root_volume_size_gb`
    - `root_volume_type`
+   - `db_root_volume_size_gb`, `llm_obs_root_volume_size_gb`, `clickhouse_root_volume_size_gb`
    - `db_*`, `llm_obs_*`, `clickhouse_*`
    - `node_definitions`
 
@@ -108,6 +110,11 @@
    ```hcl
    existing_server_security_group_id        = "sg-xxxxxxxxxxxxxxxxx"
    existing_worker_shared_security_group_id = "sg-xxxxxxxxxxxxxxxxx"
+   enable_storage                           = false
+
+   db_root_volume_size_gb         = 40
+   llm_obs_root_volume_size_gb    = 40
+   clickhouse_root_volume_size_gb = 100
    ```
 5. `terragrunt/dev`에서 `terragrunt plan`을 실행한다.
 6. 결과를 검토한다.
@@ -121,6 +128,7 @@
 - remote backend 가능 여부는 IAM 제약 확인 후 결정
 - 기본 VPC와 기존 서브넷은 입력값으로만 사용한다
 - 현재 학습 계정에서는 outbound 규칙 삭제가 불가하므로, bootstrap SG는 기본 outbound를 그대로 둔다
+- 현재 학습 계정에서는 `ec2:CreateVolume`도 불가하므로, 별도 EBS 대신 stateful 노드의 root volume 확장 경로를 사용한다
 
 ### 4. K3S bootstrap
 
