@@ -7,3 +7,6 @@
 
 skills-lock.json
 AGENTS.md
+
+# Terraform local working directories
+.terraform/

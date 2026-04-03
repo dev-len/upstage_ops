@@ -41,4 +41,5 @@ This directory is the environment entrypoint layer for Terraform modules in [ter
 - `terraform.source` uses `../../terraform//environments/dev` so Terragrunt copies the whole `terraform/` tree and relative module paths remain valid in cache.
 - Use `terragrunt hclfmt --check` for HCL format validation.
 - In CloudShell, prefer `TG_DOWNLOAD_DIR` over deprecated `TERRAGRUNT_DOWNLOAD`.
+- In the training account, security groups must keep bootstrap outbound as allow-all because `ec2:RevokeSecurityGroupEgress` is denied by policy.
 - Validation and review expectations are defined in [validation-baseline.md](/Users/len/Desktop/project/k8s/docs/tasks/validation-baseline.md).

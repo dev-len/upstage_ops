@@ -40,6 +40,7 @@
   - `TG_DOWNLOAD_DIR` 사용 여부
   - remote backend 사용 가능 여부
   - 인증/권한 부족 시 plan/apply 차단 가능성
+  - 학습 계정 정책 때문에 `ec2:RevokeSecurityGroupEgress`가 차단될 수 있음
 
 ### 2.3 AWS 학습용 계정
 
@@ -113,6 +114,7 @@
 - [ ] 기존 VPC와 기존 서브넷만 사용한다.
 - [ ] 네트워크 리소스 수정 권한이 없으면, 생성/변경을 시도하지 않는다.
 - [ ] IGW / route / subnet 수정은 권한 확인 후에만 다룬다.
+- [ ] SG bootstrap 단계에서 기본 allow-all egress를 대체하려면 `ec2:RevokeSecurityGroupEgress` 권한 여부를 먼저 확인한다.
 
 ### Kubernetes
 
