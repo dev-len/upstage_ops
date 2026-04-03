@@ -51,6 +51,7 @@ The `main_node_*` and `sub_node_*` outputs are compatibility aliases for the exp
 - It does not include `80/443`, NodePort ranges, or HA etcd ports.
 - It does not separate `app`, `metrics`, `logs-traces`, `db`, `llm-obs`, and `clickhouse` worker roles yet.
 - It intentionally models one bootstrap `server` SG and one bootstrap `worker-shared` SG only.
-- Outbound is intentionally kept as the default AWS allow-all rule during bootstrap.
-- This is required in the training account because `ec2:RevokeSecurityGroupEgress` is explicitly denied.
-- If outbound is later restricted, re-check IAM permissions before replacing the default bootstrap egress policy.
+- Outbound is intentionally left unmanaged in Terraform during bootstrap.
+- AWS keeps the default allow-all egress rule on new security groups.
+- This is required in the training account because any Terraform-managed egress flow triggers `ec2:RevokeSecurityGroupEgress`, which is explicitly denied.
+- If outbound is later restricted, re-check IAM permissions before making Terraform own bootstrap egress policy.

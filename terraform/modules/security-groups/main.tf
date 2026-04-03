@@ -3,17 +3,6 @@ resource "aws_security_group" "main_node" {
   description = "Bootstrap security group for the K3S server node"
   vpc_id      = var.vpc_id
 
-  # Keep the AWS default allow-all egress behavior as an explicit desired rule.
-  # This avoids a create-time revoke of the default rule, which is denied in the
-  # training account by ControlOnlyOwnResources.
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow all outbound"
-  }
-
   tags = {
     Name = "${var.name_prefix}-main-node-sg"
     Role = "k3s-server-bootstrap"
@@ -24,17 +13,6 @@ resource "aws_security_group" "sub_node" {
   name        = "${var.name_prefix}-sub-node-sg"
   description = "Bootstrap security group shared by K3S worker nodes"
   vpc_id      = var.vpc_id
-
-  # Keep the AWS default allow-all egress behavior as an explicit desired rule.
-  # This avoids a create-time revoke of the default rule, which is denied in the
-  # training account by ControlOnlyOwnResources.
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow all outbound"
-  }
 
   tags = {
     Name = "${var.name_prefix}-sub-node-sg"

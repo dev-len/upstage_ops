@@ -114,7 +114,8 @@
 - [ ] 기존 VPC와 기존 서브넷만 사용한다.
 - [ ] 네트워크 리소스 수정 권한이 없으면, 생성/변경을 시도하지 않는다.
 - [ ] IGW / route / subnet 수정은 권한 확인 후에만 다룬다.
-- [ ] SG bootstrap 단계에서 기본 allow-all egress를 대체하려면 `ec2:RevokeSecurityGroupEgress` 권한 여부를 먼저 확인한다.
+- [ ] SG bootstrap 단계에서는 outbound를 Terraform이 직접 관리하지 않는 기본 구성을 우선 사용한다.
+- [ ] 기본 allow-all egress를 대체하려면 `ec2:RevokeSecurityGroupEgress` 권한 여부를 먼저 확인한다.
 
 ### Kubernetes
 
