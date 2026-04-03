@@ -62,6 +62,12 @@ The current environment is assumed to have existing subnets in `us-east-1` simil
 
 Subnet IDs are intentionally treated as inputs and must be filled in manually in `terragrunt/dev/inputs.hcl` or a compatible environment-specific input file.
 
+Security groups can also be treated as inputs when the current account cannot create bootstrap SGs without hitting IAM restrictions.
+If both existing SG IDs are provided, the dev environment skips the SG module and reuses:
+
+- `existing_server_security_group_id`
+- `existing_worker_shared_security_group_id`
+
 ## Current gap vs target architecture
 
 The current Terraform code does not model the full 7-node topology yet.

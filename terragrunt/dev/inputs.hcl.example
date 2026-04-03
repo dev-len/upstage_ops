@@ -7,6 +7,10 @@ inputs = {
   ami_id      = "ami-xxxxxxxxxxxxxxxxx"
   key_name    = "k3s-dev-key"
 
+  # Set both values to reuse pre-created security groups and skip SG creation.
+  # existing_server_security_group_id        = "sg-xxxxxxxxxxxxxxxxx"
+  # existing_worker_shared_security_group_id = "sg-xxxxxxxxxxxxxxxxx"
+
   subnet_ids_by_az = {
     us-east-1a = "subnet-xxxxxxxx"
     us-east-1b = "subnet-xxxxxxxx"

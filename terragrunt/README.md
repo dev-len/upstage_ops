@@ -15,6 +15,7 @@ This directory is the environment entrypoint layer for Terraform modules in [ter
 
 1. Copy `dev/inputs.hcl.example` to `dev/inputs.hcl`.
 2. Fill in the real `vpc_id`, `admin_cidr`, `subnet_ids_by_az`, `ami_id`, and `key_name`.
+   - If the account cannot create bootstrap security groups, pre-create them and set both `existing_server_security_group_id` and `existing_worker_shared_security_group_id`.
 3. Review optional baseline inputs:
    - `primary_az`
    - `instance_type`

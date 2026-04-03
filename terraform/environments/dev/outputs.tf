@@ -1,20 +1,20 @@
 output "server_security_group_id" {
-  value       = module.security_groups.server_security_group_id
+  value       = local.use_existing_security_groups ? var.existing_server_security_group_id : module.security_groups[0].server_security_group_id
   description = "Security group ID for the bootstrap K3S server node."
 }
 
 output "worker_shared_security_group_id" {
-  value       = module.security_groups.worker_shared_security_group_id
+  value       = local.use_existing_security_groups ? var.existing_worker_shared_security_group_id : module.security_groups[0].worker_shared_security_group_id
   description = "Security group ID shared by bootstrap K3S worker nodes."
 }
 
 output "main_node_security_group_id" {
-  value       = module.security_groups.main_node_security_group_id
+  value       = local.use_existing_security_groups ? var.existing_server_security_group_id : module.security_groups[0].main_node_security_group_id
   description = "Compatibility alias for server_security_group_id."
 }
 
 output "sub_node_security_group_id" {
-  value       = module.security_groups.sub_node_security_group_id
+  value       = local.use_existing_security_groups ? var.existing_worker_shared_security_group_id : module.security_groups[0].sub_node_security_group_id
   description = "Compatibility alias for worker_shared_security_group_id."
 }
 

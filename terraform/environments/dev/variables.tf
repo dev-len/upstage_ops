@@ -20,6 +20,34 @@ variable "admin_cidr" {
   description = "Admin CIDR allowed to SSH into nodes."
 }
 
+variable "existing_server_security_group_id" {
+  description = "Existing security group ID to use for the K3S bootstrap server node instead of creating one."
+  type        = string
+  default     = null
+
+  validation {
+    condition = (
+      var.existing_server_security_group_id == null ||
+      can(regex("^sg-[0-9a-z]+$", var.existing_server_security_group_id))
+    )
+    error_message = "existing_server_security_group_id must look like an AWS security group ID."
+  }
+}
+
+variable "existing_worker_shared_security_group_id" {
+  description = "Existing security group ID to use for shared K3S worker nodes instead of creating one."
+  type        = string
+  default     = null
+
+  validation {
+    condition = (
+      var.existing_worker_shared_security_group_id == null ||
+      can(regex("^sg-[0-9a-z]+$", var.existing_worker_shared_security_group_id))
+    )
+    error_message = "existing_worker_shared_security_group_id must look like an AWS security group ID."
+  }
+}
+
 variable "subnet_ids_by_az" {
   type        = map(string)
   description = "Existing subnet IDs keyed by AZ. Subnets are not created by this configuration."
