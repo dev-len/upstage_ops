@@ -1,0 +1,96 @@
+# k8s Infra Workspace
+
+이 저장소는 AWS 학습용 계정 제약 안에서 K3S 7노드 기준선을 단계적으로 만드는 인프라 작업공간이다.
+
+현재 기준선은 다음까지 포함한다.
+
+- `server + worker-shared` Security Group bootstrap
+- 7노드 EC2 baseline
+- stateful 역할용 EBS attachment baseline
+- K3S bootstrap 스크립트
+- observability / Langfuse 배치 values
+- Terragrunt dev entrypoint
+- IaC validation / pipeline 문서
+
+## 시작점
+
+- Terragrunt 실행 가이드: [README.md](/Users/len/Desktop/project/k8s/terragrunt/README.md)
+- Terraform 구조 설명: [README.md](/Users/len/Desktop/project/k8s/terraform/README.md)
+- 작업 기준 문서: [README.md](/Users/len/Desktop/project/k8s/docs/tasks/README.md)
+- 검증 기준: [validation-baseline.md](/Users/len/Desktop/project/k8s/docs/tasks/validation-baseline.md)
+- IaC 실행 경로: [iac-pipeline.md](/Users/len/Desktop/project/k8s/docs/tasks/iac-pipeline.md)
+
+## 실행 가이드
+
+### 1. 입력 준비
+
+1. `terragrunt/dev/inputs.hcl.example`를 `terragrunt/dev/inputs.hcl`로 복사한다.
+2. 실제 값을 채운다.
+   - `vpc_id`
+   - `admin_cidr`
+   - `subnet_ids_by_az`
+   - `ami_id`
+   - `key_name`
+3. 필요하면 baseline 입력도 조정한다.
+   - `primary_az`
+   - `instance_type`
+   - `associate_public_ip_address`
+   - `root_volume_size_gb`
+   - `root_volume_type`
+   - `db_*`, `llm_obs_*`, `clickhouse_*`
+   - `node_definitions`
+
+### 2. 로컬 검토
+
+로컬에서는 구조와 문서 정합성을 먼저 본다.
+
+- `terraform fmt -check -recursive`
+- `terragrunt hclfmt --check`
+- `terragrunt validate`
+
+현재 환경에 `terraform` 또는 `terragrunt`가 없으면 실패가 아니라 `blocked`로 기록한다.
+
+### 3. CloudShell 실행
+
+실제 AWS 실행은 CloudShell 기준으로 잡는다.
+
+1. 필요한 바이너리와 cache 위치를 준비한다.
+2. `terragrunt/dev`에서 `terragrunt plan`을 실행한다.
+3. 결과를 검토한다.
+4. 수동 승인 후 `terragrunt apply`를 실행한다.
+
+주의:
+
+- 장시간 실행은 `tmux` 사용
+- remote backend 가능 여부는 IAM 제약 확인 후 결정
+- 기본 VPC와 기존 서브넷은 입력값으로만 사용한다
+
+### 4. K3S bootstrap
+
+Terraform 적용 후 K3S bootstrap은 Terraform 밖에서 수행한다.
+
+- bootstrap 자산: [README.md](/Users/len/Desktop/project/k8s/bootstrap/k3s/README.md)
+- server script: [server-init.sh](/Users/len/Desktop/project/k8s/bootstrap/k3s/server-init.sh)
+- agent script: [agent-init.sh](/Users/len/Desktop/project/k8s/bootstrap/k3s/agent-init.sh)
+
+Terraform 출력 중 아래가 직접 handoff 된다.
+
+- `k3s_server_private_ip`
+- `k3s_server_public_ip`
+- `k3s_server_endpoint`
+- `k3s_node_roles_by_name`
+- `k3s_node_names_by_role`
+
+### 5. Workload 배치
+
+K3S bootstrap 이후 observability / Langfuse 배치는 별도 values를 기준으로 한다.
+
+- observability: [README.md](/Users/len/Desktop/project/k8s/deployments/observability/README.md)
+- langfuse: [README.md](/Users/len/Desktop/project/k8s/deployments/langfuse/README.md)
+
+## 현재 제약
+
+- 기본 VPC와 기존 서브넷을 재사용한다.
+- 초기 SG 모델은 `server + worker-shared`다.
+- `80/443` 공개와 역할별 SG 세분화는 아직 후속 작업이다.
+- 실제 `terraform/terragrunt/helm/kubectl` 검증은 실행 환경 준비 여부에 따라 `blocked`가 될 수 있다.
