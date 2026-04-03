@@ -104,6 +104,8 @@
   - 참조: [`ADR-006`](/Users/len/Desktop/project/k8s/docs/adr/006-adopt-k3s-seven-node-topology.md)
 - 시각화 플랫폼은 Grafana로 통일
   - 참조: [`ADR-004`](/Users/len/Desktop/project/k8s/docs/adr/004-standardize-on-grafana-for-visualization.md)
+- Security Group 포트 매트릭스 초안 작성
+  - 참조: [`security-group-matrix.md`](/Users/len/Desktop/project/k8s/docs/security-group-matrix.md)
 
 ## 요구사항
 

@@ -10,6 +10,7 @@
   - [ADR-006](./adr/006-adopt-k3s-seven-node-topology.md)
   - [ADR-004](./adr/004-standardize-on-grafana-for-visualization.md)
   - [네트워크 인벤토리](./network-inventory.md)
+  - [Security Group 포트 매트릭스](./security-group-matrix.md)
 
 ## 1. 목적
 
@@ -99,12 +100,12 @@ flowchart TB
 
 ### 5.2 노드 역할
 
-아래는 확정된 안 A(7대) 기준이다.
+아래는 확정된 7노드 기준이다.
 
 | 노드 역할 | 수량 | 주요 책임 | 비고 |
 |-----------|------|-----------|------|
 | Server | 1대 | K3S 컨트롤 플레인 (etcd, API Server, Scheduler) | 필수 |
-| Agent: App | 1대~ | 프론트엔드/백엔드 애플리케이션 배치 | 서비스 스택 확정 후 조정 |
+| Agent: App | 2대 | 프론트엔드/백엔드 애플리케이션 배치 | 앱 워크로드 여유 확보 |
 | Agent: Metrics | 1대 | Prometheus, Grafana | 메트릭 수집 및 시각화 전용 |
 | Agent: Logs-Traces | 1대 | Loki, Tempo, OTel Collector | 로그/트레이스 수집 전용 |
 | Agent: DB | 1대 | PostgreSQL, Redis | 저장소 계층 (App DB + Langfuse metadata 공용) |
@@ -251,6 +252,8 @@ flowchart LR
 - Security Group 포트 매트릭스 상세 (SSH, K3S API, Ingress, kubelet, VXLAN 등)
 - GitHub Actions에서 VPC 내 EC2 접근 방식 (퍼블릭 IP 직접 접근 vs Self-hosted runner)
 - 로컬 개발 환경에서 클러스터 접근 방식 (kubeconfig 배포, SSH 터널 등)
+
+> 상세 포트 설계 초안은 [Security Group 포트 매트릭스](./security-group-matrix.md)에 정리한다.
 
 ## 11. 데이터 영속성 및 백업
 
