@@ -14,8 +14,8 @@ locals {
     for name, definition in var.node_definitions :
     name => merge(
       definition,
-      local.root_volume_overrides_by_name[name] != null ? {
-        root_volume_size_gb = local.root_volume_overrides_by_name[name]
+      lookup(local.root_volume_overrides_by_name, name, null) != null ? {
+        root_volume_size_gb = lookup(local.root_volume_overrides_by_name, name, null)
       } : {}
     )
   }
