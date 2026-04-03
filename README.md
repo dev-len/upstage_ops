@@ -143,6 +143,7 @@
 Terraform 적용 후 K3S bootstrap은 Terraform 밖에서 수행한다.
 
 - bootstrap 자산: [README.md](/Users/len/Desktop/project/k8s/bootstrap/k3s/README.md)
+- bastion helper 자산: [README.md](/Users/len/Desktop/project/k8s/bootstrap/bastion/README.md)
 - server script: [server-init.sh](/Users/len/Desktop/project/k8s/bootstrap/k3s/server-init.sh)
 - agent script: [agent-init.sh](/Users/len/Desktop/project/k8s/bootstrap/k3s/agent-init.sh)
 
@@ -157,6 +158,7 @@ Terraform 출력 중 아래가 직접 handoff 된다.
 - `k3s_node_names_by_role`
 
 표준 접속 경로는 `local/CloudShell -> bastion -> private nodes`다.
+private node 접속은 고정 IP 대신 EC2 `Name` 태그 조회 기반 helper script를 bastion에서 실행하는 것을 기본으로 둔다.
 
 ### 5. Workload 배치
 

@@ -17,6 +17,8 @@ Terraform provisions instances and outputs their addresses. These scripts do not
   - Installs the K3S server node
 - `agent-init.sh`
   - Installs K3S agents and joins them to the server
+- `../bastion/*`
+  - Bastion-side helper scripts that resolve node IPs by EC2 tags before SSH
 
 ## Required inputs
 
@@ -87,6 +89,9 @@ Keep the app nodes untainted and use taints only for infra-isolated roles when n
 3. Run `server-init.sh` on the server node.
 4. Read the server private IP from Terraform outputs.
 5. Run `agent-init.sh` on each worker node with the correct role labels and optional taints.
+
+When node private IPs are unstable, prefer running the SSH hop from the bastion
+host with the helper scripts in `../bastion/` instead of hardcoding IPs.
 
 ## Handoff to later lanes
 
