@@ -1,8 +1,8 @@
-# [ADR-NNN] 제목
+# [ADR] 제목
 
 - **상태**: Proposed | Accepted | Deprecated | Superseded
 - **날짜**: YYYY-MM-DD
-- **대체 ADR**: ADR-NNN (선택)
+- **대체 ADR**: YYYY-MM-DD-short-decision.md (선택)
 
 ## 맥락 (Context)
 

@@ -11,13 +11,13 @@ ADR(Architecture Decision Record)은 프로젝트에서 내린 **중요한 아�
 ### 파일명 규칙
 
 ```
-NNN-short-decision.md
+YYYY-MM-DD-short-decision.md
 ```
 
-- `NNN`: 3자리 순번 (001, 002, ...)
+- `YYYY-MM-DD`: 결정 날짜
 - `short-decision`: 결정 내용을 드러내는 짧은 kebab-case 영문
 - 파일명은 주제가 아니라 "무엇을 결정했는지"가 드러나야 한다
-- 예시: `001-adopt-k3s-over-kubernetes.md`
+- 예시: `2026-04-03-adopt-k3s-over-kubernetes.md`
 
 ### 상태 (Status)
 
@@ -29,7 +29,7 @@ NNN-short-decision.md
 | **Superseded** | 다른 ADR로 대체됨 |
 
 - 상태는 위 값 중 하나만 사용한다
-- 다른 ADR로 대체된 경우 `상태: Superseded`로 기록하고, 문서 메타데이터에 `대체 ADR: ADR-NNN`을 명시한다
+- 다른 ADR로 대체된 경우 `상태: Superseded`로 기록하고, 문서 메타데이터에 대체된 ADR 파일이나 제목을 명시한다
 
 ### 작성 시점
 
@@ -60,7 +60,7 @@ NNN-short-decision.md
 ### 작성 절차
 
 1. [`000-template.md`](./000-template.md)를 복사해 새 파일을 만든다
-2. 파일명을 `NNN-short-decision.md` 형식으로 정한다
+2. 파일명을 `YYYY-MM-DD-short-decision.md` 형식으로 정한다
 3. 메타데이터와 본문을 작성한다
 4. 대체 결정이라면 기존 ADR 상태를 `Superseded`로 바꾸고 `대체 ADR`을 채운다
 5. 이 README의 목록 표를 갱신한다
@@ -75,3 +75,4 @@ NNN-short-decision.md
 | 004 | [Grafana 단일 시각화 플랫폼 채택](./004-standardize-on-grafana-for-visualization.md) | Accepted | 2026-04-02 |
 | 005 | [Langfuse v3 저장소 토폴로지 채택](./005-adopt-langfuse-v3-storage-topology.md) | Accepted | 2026-04-03 |
 | 006 | [K3S 7노드 역할 분리 토폴로지 채택](./006-adopt-k3s-seven-node-topology.md) | Accepted | 2026-04-03 |
+| 2026-04-03 | [학습 계정에서 수동 bootstrap SG 주입 경로 채택](./2026-04-03-adopt-manual-bootstrap-sg-in-learning-account.md) | Accepted | 2026-04-03 |
