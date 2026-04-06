@@ -131,6 +131,25 @@ variable "worker_shared_security_group_id" {
   nullable = false
 }
 
+variable "k3s_bootstrap_token" {
+  description = "Shared K3S token used to bootstrap the server and agents automatically via user_data. Leave null to skip bootstrap automation."
+  type        = string
+  default     = null
+  sensitive   = true
+}
+
+variable "k3s_server_extra_args" {
+  description = "Optional extra arguments appended to the K3S server install command."
+  type        = string
+  default     = ""
+}
+
+variable "k3s_agent_extra_args_by_role" {
+  description = "Optional extra K3S agent arguments keyed by logical role."
+  type        = map(string)
+  default     = {}
+}
+
 variable "node_definitions" {
   description = "Role-aware node definitions keyed by logical node name."
   type = map(object({

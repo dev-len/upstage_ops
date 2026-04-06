@@ -75,6 +75,9 @@ module "k3s_nodes" {
   server_security_group_id        = local.use_existing_security_groups ? var.existing_server_security_group_id : module.security_groups[0].server_security_group_id
   worker_shared_security_group_id = local.use_existing_security_groups ? var.existing_worker_shared_security_group_id : module.security_groups[0].worker_shared_security_group_id
   node_definitions                = local.effective_node_definitions
+  k3s_bootstrap_token             = var.k3s_bootstrap_token
+  k3s_server_extra_args           = var.k3s_server_extra_args
+  k3s_agent_extra_args_by_role    = var.k3s_agent_extra_args_by_role
 }
 
 resource "aws_vpc_security_group_ingress_rule" "existing_server_ssh_from_bastion" {
@@ -122,6 +125,12 @@ resource "aws_instance" "bastion" {
     volume_type = var.root_volume_type
     encrypted   = true
   }
+
+  user_data = var.bootstrap_bastion_helpers ? templatefile("${path.module}/templates/bastion-user-data.sh.tftpl", {
+    aws_region       = var.aws_region
+    cluster_prefix   = var.name_prefix
+    bastion_ssh_port = var.bastion_ssh_port
+  }) : null
 
   lifecycle {
     ignore_changes = [

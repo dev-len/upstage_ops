@@ -12,6 +12,13 @@ inputs = {
   # existing_server_security_group_id        = "sg-xxxxxxxxxxxxxxxxx"
   # existing_worker_shared_security_group_id = "sg-xxxxxxxxxxxxxxxxx"
   # existing_bastion_security_group_id       = "sg-xxxxxxxxxxxxxxxxx"
+  # manage_existing_bastion_ssh_ingress_rules = false
+
+  bootstrap_bastion_helpers = true
+  # Set this to enable first-boot K3S automation. Existing running instances
+  # will not re-run user_data automatically; recreate them if you need to apply
+  # the new bootstrap path to already-created nodes.
+  # k3s_bootstrap_token = "replace-me-with-a-shared-token"
 
   subnet_ids_by_az = {
     us-east-1a = "subnet-xxxxxxxx"

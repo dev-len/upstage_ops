@@ -143,6 +143,31 @@ variable "bastion_key_name" {
   default     = null
 }
 
+variable "bootstrap_bastion_helpers" {
+  description = "Whether the bastion host should auto-install helper scripts for private node access."
+  type        = bool
+  default     = true
+}
+
+variable "k3s_bootstrap_token" {
+  description = "Shared K3S token used for first-boot bootstrap automation. Leave null to keep bootstrap manual."
+  type        = string
+  default     = null
+  sensitive   = true
+}
+
+variable "k3s_server_extra_args" {
+  description = "Optional extra arguments appended to the K3S server install command."
+  type        = string
+  default     = ""
+}
+
+variable "k3s_agent_extra_args_by_role" {
+  description = "Optional extra K3S agent arguments keyed by logical role."
+  type        = map(string)
+  default     = {}
+}
+
 variable "enable_storage" {
   description = "Whether the separate EBS storage module should run for db, llm_obs, and clickhouse roles."
   type        = bool
