@@ -4,6 +4,7 @@ set -euo pipefail
 
 readonly EVIDENCE_DIR="${EVIDENCE_DIR:-artifacts/evidence}"
 readonly TG_DIR="${TG_DIR:-terragrunt/dev}"
+readonly AUTO_APPROVE="${AUTO_APPROVE:-true}"
 
 mkdir -p /tmp/.terragrunt-cache /tmp/.terraform-plugin-cache "$EVIDENCE_DIR"
 
@@ -12,7 +13,12 @@ export TF_PLUGIN_CACHE_DIR="${TF_PLUGIN_CACHE_DIR:-/tmp/.terraform-plugin-cache}
 
 cd "$TG_DIR"
 
-terragrunt apply \
+apply_args=()
+if [[ "$AUTO_APPROVE" == "true" ]]; then
+  apply_args+=("-auto-approve")
+fi
+
+terragrunt apply "${apply_args[@]}" \
   -replace='aws_instance.bastion[0]' \
   -replace='module.k3s_nodes.aws_instance.server' \
   -replace='module.k3s_nodes.aws_instance.node["app_1"]' \

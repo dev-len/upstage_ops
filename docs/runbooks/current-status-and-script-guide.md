@@ -133,12 +133,13 @@
 ### `scripts/cloudshell-replace-apply.sh`
 
 - 목적:
-  - bastion + 전체 node를 replace apply
+  - bastion + 전체 node를 비대화형 replace apply
 - 실행 위치:
   - CloudShell, repo root
 - 주의:
   - `inputs.hcl` 값이 먼저 채워져 있어야 함
   - 기존 인스턴스의 first-boot 자동화를 실제 반영하는 핵심 스크립트
+  - 기본은 `-auto-approve`이며, 수동 승인으로 돌리려면 `AUTO_APPROVE=false`를 사용
 
 ### `scripts/phase3-verify.sh`
 

@@ -36,7 +36,7 @@
 - `bash scripts/cloudshell-plan.sh`
   - CloudShell에서 `terragrunt plan`과 output 저장
 - `bash scripts/cloudshell-replace-apply.sh`
-  - bastion + 전체 node를 replace apply
+  - bastion + 전체 node를 비대화형 replace apply
 - `bash scripts/phase3-verify.sh`
   - server 기준 Phase 3 검증
 - `bash scripts/capture-phase-evidence.sh`
