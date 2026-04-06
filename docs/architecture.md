@@ -2,13 +2,15 @@
 
 - 문서 상태: Draft
 - 작성일: 2026-04-03
-- 최종 수정: 2026-04-03
+- 최종 수정: 2026-04-04
 - 기준 문서:
   - [PRD](./PRD.md)
   - [ADR-001](./adr/001-adopt-hybrid-telemetry-collection.md)
   - [ADR-005](./adr/005-adopt-langfuse-v3-storage-topology.md)
   - [ADR-006](./adr/006-adopt-k3s-seven-node-topology.md)
   - [ADR-004](./adr/004-standardize-on-grafana-for-visualization.md)
+  - [ADR-2026-04-03](./adr/2026-04-03-adopt-manual-bootstrap-sg-in-learning-account.md)
+  - [ADR-2026-04-04](./adr/2026-04-04-adopt-bastion-entrypoint-for-private-fleet.md)
   - [네트워크 인벤토리](./network-inventory.md)
   - [Security Group 포트 매트릭스](./security-group-matrix.md)
 
@@ -34,7 +36,8 @@
 | 시각화 | Grafana 단일 플랫폼 사용 | ADR-004 |
 | LLM 관측 | Langfuse v3 셀프 호스팅 (PostgreSQL + ClickHouse + Redis) | ADR-005 |
 | 배포 환경 | AWS `us-east-1`, CloudShell에서 Terragrunt/Terraform 실행 | PRD |
-| 네트워크 | 기본 VPC/서브넷 사용, 외부 접근은 K3S ingress 기반 | PRD, [네트워크 인벤토리](./network-inventory.md) |
+| 네트워크 | 기본 VPC/서브넷 사용, private fleet는 bastion 경유 접근 | PRD, ADR-2026-04-04, [네트워크 인벤토리](./network-inventory.md) |
+| 학습 계정 우회 | bootstrap SG는 수동 생성 후 ID 주입, storage는 기본 비활성 | ADR-2026-04-03 |
 
 ## 4. 시스템 컨텍스트
 
@@ -70,6 +73,7 @@ flowchart TB
     CloudShell["AWS CloudShell<br/>Terragrunt / Terraform 실행"]
 
     subgraph Network["기본 VPC 172.31.0.0/16 · 단일 AZ 배치 권장"]
+      Bastion["Bastion<br/>공인 진입점"]
       CP["Server Node<br/>K3S Control Plane"]
       APP["Agent: App<br/>애플리케이션 워크로드"]
       METRICS["Agent: Metrics<br/>Prometheus + Grafana"]
@@ -82,21 +86,31 @@ flowchart TB
   end
 
   CloudShell -->|"terragrunt apply"| CP
+  CloudShell -->|"SSH 22022/tcp"| Bastion
+  Bastion -->|"SSH 22/tcp"| CP
+  Bastion -->|"SSH 22/tcp"| APP
+  Bastion -->|"SSH 22/tcp"| METRICS
+  Bastion -->|"SSH 22/tcp"| LOGSTRACE
+  Bastion -->|"SSH 22/tcp"| DB
+  Bastion -->|"SSH 22/tcp"| LLM
+  Bastion -->|"SSH 22/tcp"| CH
   CP --- APP
   CP --- METRICS
   CP --- LOGSTRACE
   CP --- DB
   CP --- LLM
   CP --- CH
-  DB --- EBS
-  LLM --- EBS
-  CH --- EBS
+  DB -.- EBS
+  LLM -.- EBS
+  CH -.- EBS
   METRICS -.- EBS
   LOGSTRACE -.- EBS
 
 ```
 
 > 안 A를 최종 토폴로지로 채택한다. ClickHouse는 DB 노드와 분리된 전용 노드에 배치한다.
+> 학습 계정 기준 운영 진입점은 bastion 하나로 고정하고, private node는 public IP 없이 유지한다.
+> 별도 EBS는 학습 계정 권한 제약 때문에 기본 경로에서 제외되며, 현재 baseline은 compute + network 중심이다.
 
 ### 5.2 노드 역할
 
@@ -239,16 +253,18 @@ flowchart LR
 ### 10.1 확정된 보안 원칙
 
 - EC2 SSH 접근은 Key Pair 기반으로 제한한다.
+- 외부 SSH 진입점은 bastion 1대로 고정한다.
+- bastion 외부 진입 포트는 `22022/tcp`, bastion에서 private node로 들어가는 SSH는 `22/tcp`를 사용한다.
 - K3S API Server 접근은 kubeconfig 기반으로 제어한다.
 - Grafana, Langfuse 등 웹 UI는 기본 인증(ID/PW)을 설정한다.
 - 민감 정보(DB 비밀번호, API 키 등)는 Kubernetes Secret으로 관리한다.
 - Security Group은 노드 간 통신 포트와 외부 접근 포트를 최소 허용한다.
+- private node 접근은 고정 private IP가 아니라 EC2 `Name` 태그 기준 최신 private IP 조회를 기본 운영 패턴으로 사용한다.
 
 ### 10.2 미결정 보안 항목
 
 아래 항목은 Phase 2~3에서 확정한다.
 
-- SSH 접근 방식: 직접 접근 vs Bastion 구성
 - Security Group 포트 매트릭스 상세 (SSH, K3S API, Ingress, kubelet, VXLAN 등)
 - GitHub Actions에서 VPC 내 EC2 접근 방식 (퍼블릭 IP 직접 접근 vs Self-hosted runner)
 - 로컬 개발 환경에서 클러스터 접근 방식 (kubeconfig 배포, SSH 터널 등)
