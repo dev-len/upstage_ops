@@ -14,7 +14,7 @@ cd "$TG_DIR"
 
 terragrunt apply \
   -replace='aws_instance.bastion[0]' \
-  -replace='module.k3s_nodes.aws_instance.node["server"]' \
+  -replace='module.k3s_nodes.aws_instance.server' \
   -replace='module.k3s_nodes.aws_instance.node["app_1"]' \
   -replace='module.k3s_nodes.aws_instance.node["app_2"]' \
   -replace='module.k3s_nodes.aws_instance.node["metrics"]' \
