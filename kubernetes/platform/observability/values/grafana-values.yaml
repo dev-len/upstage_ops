@@ -1,0 +1,14 @@
+grafana:
+  nodeSelector:
+    topology.k3s.io/role: metrics
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: metrics
+      effect: NoSchedule
+
+  admin:
+    existingSecret: grafana-admin-secret
+
+  ingress:
+    enabled: false

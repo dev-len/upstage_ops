@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample-httpbin
+  namespace: sample-app
+  labels:
+    app.kubernetes.io/name: sample-httpbin
+    app.kubernetes.io/part-of: sample-httpbin
+spec:
+  selector:
+    app.kubernetes.io/name: sample-httpbin
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

@@ -75,5 +75,6 @@ YYYY-MM-DD-short-decision.md
 | 004 | [Grafana 단일 시각화 플랫폼 채택](./004-standardize-on-grafana-for-visualization.md) | Accepted | 2026-04-02 |
 | 005 | [Langfuse v3 저장소 토폴로지 채택](./005-adopt-langfuse-v3-storage-topology.md) | Accepted | 2026-04-03 |
 | 006 | [K3S 7노드 역할 분리 토폴로지 채택](./006-adopt-k3s-seven-node-topology.md) | Accepted | 2026-04-03 |
+| 007 | [Envoy AI Gateway 검토 범위를 일반 ingress와 분리한다](./007-document-envoy-ai-gateway-evaluation-boundary.md) | Accepted | 2026-04-06 |
 | 2026-04-03 | [학습 계정에서 수동 bootstrap SG 주입 경로 채택](./2026-04-03-adopt-manual-bootstrap-sg-in-learning-account.md) | Accepted | 2026-04-03 |
 | 2026-04-04 | [private fleet 운영을 위한 bastion 진입점 채택](./2026-04-04-adopt-bastion-entrypoint-for-private-fleet.md) | Accepted | 2026-04-04 |

@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - secret-example.yaml
+  - networkpolicy.yaml
+
+configMapGenerator:
+  - name: observability-values
+    namespace: monitoring
+    files:
+      - values/grafana-values.yaml
+      - values/loki-values.yaml
+      - values/otel-collector-values.yaml
+      - values/prometheus-values.yaml
+      - values/tempo-values.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true

@@ -5,8 +5,12 @@ on:
     paths:
       - "terraform/**"
       - "terragrunt/**"
+      - "kubernetes/**"
+      - "scripts/**"
       - "root.hcl"
+      - "docs/runbooks/**"
       - "docs/tasks/**"
+      - "docs/adr/**"
       - ".github/workflows/iac-plan.yml"
   workflow_dispatch:
 
@@ -32,8 +36,22 @@ jobs:
             "https://github.com/gruntwork-io/terragrunt/releases/download/v${TG_VERSION}/terragrunt_linux_amd64"
           chmod +x /usr/local/bin/terragrunt
 
+      - name: Setup Kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.32.2
+
       - name: Terraform Fmt Check
         run: terraform -chdir=terraform fmt -check -recursive
+
+      - name: Shell Syntax Check
+        run: bash -n scripts/render-k8s.sh scripts/capture-phase-evidence.sh scripts/helm-rollout.sh
+
+      - name: Kustomize Render Check
+        run: |
+          kubectl kustomize kubernetes/platform/observability >/tmp/observability.yaml
+          kubectl kustomize kubernetes/platform/langfuse >/tmp/langfuse.yaml
+          kubectl kustomize kubernetes/apps/sample-httpbin >/tmp/sample-httpbin.yaml
 
       - name: Terragrunt Hclfmt
         run: terragrunt hclfmt --check

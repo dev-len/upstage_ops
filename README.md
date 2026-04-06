@@ -10,6 +10,7 @@
 - stateful 역할용 storage baseline
 - K3S bootstrap 스크립트
 - observability / Langfuse 배치 values
+- Kubernetes workload layer
 - Terragrunt dev entrypoint
 - IaC validation / pipeline 문서
 
@@ -20,6 +21,11 @@
 - 작업 기준 문서: [README.md](/Users/len/Desktop/project/k8s/docs/tasks/README.md)
 - 검증 기준: [validation-baseline.md](/Users/len/Desktop/project/k8s/docs/tasks/validation-baseline.md)
 - IaC 실행 경로: [iac-pipeline.md](/Users/len/Desktop/project/k8s/docs/tasks/iac-pipeline.md)
+- Cluster bring-up: [cluster-bring-up.md](/Users/len/Desktop/project/k8s/docs/runbooks/cluster-bring-up.md)
+- Workload rollout: [workload-rollout.md](/Users/len/Desktop/project/k8s/docs/runbooks/workload-rollout.md)
+- Kubernetes manifests: [README.md](/Users/len/Desktop/project/k8s/kubernetes/README.md)
+- AI Gateway 검토: [007-document-envoy-ai-gateway-evaluation-boundary.md](/Users/len/Desktop/project/k8s/docs/adr/007-document-envoy-ai-gateway-evaluation-boundary.md)
+- Evidence artifacts: [README.md](/Users/len/Desktop/project/k8s/artifacts/evidence/README.md)
 
 ## 실행 가이드
 
@@ -167,6 +173,15 @@ K3S bootstrap 이후 observability / Langfuse 배치는 별도 values를 기준�
 
 - observability: [README.md](/Users/len/Desktop/project/k8s/deployments/observability/README.md)
 - langfuse: [README.md](/Users/len/Desktop/project/k8s/deployments/langfuse/README.md)
+- kubernetes workload layer: [README.md](/Users/len/Desktop/project/k8s/kubernetes/README.md)
+
+선언형 배포 진입점은 아래 순서를 기본으로 한다.
+
+- `kubectl apply -k kubernetes/platform/observability`
+- `kubectl apply -k kubernetes/platform/langfuse`
+- `kubectl apply -k kubernetes/apps/sample-httpbin`
+
+실제 배포 순서와 증거 수집은 [workload-rollout.md](/Users/len/Desktop/project/k8s/docs/runbooks/workload-rollout.md)를 따른다.
 
 ## 현재 제약
 

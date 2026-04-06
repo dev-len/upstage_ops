@@ -37,6 +37,14 @@
 - `T7`: 공통 검증/보안/리뷰 기준 문서
 - `T8`: IaC pipeline 문서와 GitHub Actions skeleton
 
+아직 남아 있는 핵심 갭은 아래다.
+
+- 실제 CloudShell `terragrunt plan` 성공 증거
+- 실제 K3S bring-up 결과
+- `kubernetes/` 기준 workload 레이어의 실제 적용 증거
+- 샘플 앱 외부 응답 검증
+- observability / Langfuse 실배포 증거
+
 ## 2. 병렬 실행 규칙
 
 ### 2.1 공통 규칙
@@ -426,8 +434,10 @@ subagent를 실제로 띄울 때는 아래 순서를 추천한다.
 
 현 시점에서 바로 시작 가능한 lane은 다음이다.
 
-- `T1`: 아직 Terragrunt 계층이 없다.
-- `T2`: 현재 SG 모듈은 존재하지만 변수 검증/명명/출력 정리가 덜 되어 있다.
-- `T7`: 검증 기준 문서는 아직 독립적으로 정리되어 있지 않다.
+- `T6-ops`: `deployments/*` values와 `kubernetes/` 레이어를 실제 Helm/Kustomize 적용 흐름으로 검증
+- `Phase 2 evidence`: CloudShell에서 `terragrunt plan`과 `terragrunt output` 증거 확보
+- `Phase 3 bring-up`: bastion 경유 K3S bootstrap 실행
+- `Phase 5 sample app`: 샘플 앱 ingress 응답 검증
+- `Phase 7 langfuse`: secret 주입 후 실제 trace 확인
 
-즉, 첫 병렬 wave는 `T1 + T2 + T7`이 가장 안전하다.
+즉, 현재는 "기반 코드 작성"보다 "실행 증거 확보와 workload 적용"이 첫 우선순위다.

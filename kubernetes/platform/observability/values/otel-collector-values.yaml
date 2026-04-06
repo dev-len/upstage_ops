@@ -1,0 +1,35 @@
+mode: deployment
+
+config:
+  receivers:
+    otlp:
+      protocols:
+        grpc: {}
+        http: {}
+    filelog:
+      include:
+        - /var/log/pods/*/*/*.log
+  exporters:
+    loki:
+      endpoint: http://loki-gateway.logging.svc.cluster.local/loki/api/v1/push
+    otlp/tempo:
+      endpoint: tempo.monitoring.svc.cluster.local:4317
+      tls:
+        insecure: true
+  service:
+    pipelines:
+      logs:
+        receivers: [filelog]
+        exporters: [loki]
+      traces:
+        receivers: [otlp]
+        exporters: [otlp/tempo]
+
+nodeSelector:
+  topology.k3s.io/role: logs-traces
+
+tolerations:
+  - key: dedicated
+    operator: Equal
+    value: logs-traces
+    effect: NoSchedule

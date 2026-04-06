@@ -1,0 +1,26 @@
+langfuse:
+  nodeSelector:
+    topology.k3s.io/role: llm-obs
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: llm-obs
+      effect: NoSchedule
+
+  envFromSecret: langfuse-app-secret
+
+postgresql:
+  enabled: false
+redis:
+  enabled: false
+clickhouse:
+  enabled: false
+
+externalDatabase:
+  existingSecret: langfuse-db-secret
+
+externalRedis:
+  existingSecret: langfuse-redis-secret
+
+externalClickhouse:
+  existingSecret: langfuse-clickhouse-secret

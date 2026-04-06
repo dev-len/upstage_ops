@@ -1,0 +1,14 @@
+loki:
+  commonConfig:
+    replication_factor: 1
+
+  nodeSelector:
+    topology.k3s.io/role: logs-traces
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: logs-traces
+      effect: NoSchedule
+
+  storage:
+    type: filesystem
