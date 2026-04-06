@@ -27,18 +27,18 @@ join_csv() {
   done
 }
 
-readonly NODE_TAINTS="${K3S_NODE_TAINTS:-}"
-readonly AGENT_ARGS="${K3S_AGENT_ARGS:-}"
-readonly INSTALL_EXEC="agent --node-name ${K3S_NODE_NAME}$(join_csv "$K3S_NODE_LABELS" "--node-label")$(join_csv "$NODE_TAINTS" "--node-taint") ${AGENT_ARGS}"
+readonly NODE_TAINTS="$${K3S_NODE_TAINTS:-}"
+readonly AGENT_ARGS="$${K3S_AGENT_ARGS:-}"
+readonly INSTALL_EXEC="agent --node-name $${K3S_NODE_NAME}$$(join_csv "$K3S_NODE_LABELS" "--node-label")$$(join_csv "$NODE_TAINTS" "--node-taint") $${AGENT_ARGS}"
 
 for _ in $(seq 1 60); do
-  if curl -skf "https://${K3S_SERVER_HOST}:6443/ping" >/dev/null 2>&1; then
+  if curl -skf "https://$${K3S_SERVER_HOST}:6443/ping" >/dev/null 2>&1; then
     break
   fi
   sleep 10
 done
 
-curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="${INSTALL_EXEC}" K3S_URL="https://${K3S_SERVER_HOST}:6443" K3S_TOKEN="${K3S_TOKEN}" sh -
+curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="$${INSTALL_EXEC}" K3S_URL="https://$${K3S_SERVER_HOST}:6443" K3S_TOKEN="$${K3S_TOKEN}" sh -
 SCRIPT
 
 chmod +x /usr/local/bin/bootstrap-k3s-agent.sh

@@ -27,12 +27,12 @@ join_csv() {
   done
 }
 
-readonly NODE_LABELS="${K3S_NODE_LABELS:-topology.k3s.io/role=server}"
-readonly NODE_TAINTS="${K3S_NODE_TAINTS:-}"
-readonly SERVER_ARGS="${K3S_SERVER_ARGS:-}"
-readonly INSTALL_EXEC="server --node-name ${K3S_NODE_NAME}$(join_csv "$NODE_LABELS" "--node-label")$(join_csv "$NODE_TAINTS" "--node-taint") ${SERVER_ARGS}"
+readonly NODE_LABELS="$${K3S_NODE_LABELS:-topology.k3s.io/role=server}"
+readonly NODE_TAINTS="$${K3S_NODE_TAINTS:-}"
+readonly SERVER_ARGS="$${K3S_SERVER_ARGS:-}"
+readonly INSTALL_EXEC="server --node-name $${K3S_NODE_NAME}$$(join_csv "$NODE_LABELS" "--node-label")$$(join_csv "$NODE_TAINTS" "--node-taint") $${SERVER_ARGS}"
 
-curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="${INSTALL_EXEC}" K3S_TOKEN="${K3S_TOKEN}" sh -
+curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="$${INSTALL_EXEC}" K3S_TOKEN="$${K3S_TOKEN}" sh -
 SCRIPT
 
 chmod +x /usr/local/bin/bootstrap-k3s-server.sh

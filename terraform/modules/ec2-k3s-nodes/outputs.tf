@@ -11,23 +11,38 @@ locals {
 
 output "instance_ids_by_name" {
   description = "EC2 instance IDs keyed by logical node name."
-  value = {
-    for name, instance in aws_instance.node : name => instance.id
-  }
+  value = merge(
+    {
+      (local.server_node_name) = aws_instance.server.id
+    },
+    {
+      for name, instance in aws_instance.node : name => instance.id
+    }
+  )
 }
 
 output "private_ips_by_name" {
   description = "Private IPv4 addresses keyed by logical node name."
-  value = {
-    for name, instance in aws_instance.node : name => instance.private_ip
-  }
+  value = merge(
+    {
+      (local.server_node_name) = aws_instance.server.private_ip
+    },
+    {
+      for name, instance in aws_instance.node : name => instance.private_ip
+    }
+  )
 }
 
 output "public_ips_by_name" {
   description = "Public IPv4 addresses keyed by logical node name."
-  value = {
-    for name, instance in aws_instance.node : name => instance.public_ip
-  }
+  value = merge(
+    {
+      (local.server_node_name) = aws_instance.server.public_ip
+    },
+    {
+      for name, instance in aws_instance.node : name => instance.public_ip
+    }
+  )
 }
 
 output "node_roles_by_name" {
@@ -42,15 +57,15 @@ output "node_names_by_role" {
 
 output "server_instance_id" {
   description = "Instance ID for the K3S bootstrap server node."
-  value       = aws_instance.node[local.node_names_by_role.server[0]].id
+  value       = aws_instance.server.id
 }
 
 output "server_private_ip" {
   description = "Private IPv4 address for the K3S bootstrap server node."
-  value       = aws_instance.node[local.node_names_by_role.server[0]].private_ip
+  value       = aws_instance.server.private_ip
 }
 
 output "server_public_ip" {
   description = "Public IPv4 address for the K3S bootstrap server node."
-  value       = aws_instance.node[local.node_names_by_role.server[0]].public_ip
+  value       = aws_instance.server.public_ip
 }
