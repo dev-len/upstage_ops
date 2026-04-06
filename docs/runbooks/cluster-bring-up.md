@@ -72,6 +72,12 @@ ls -la /opt/k3s-bootstrap
 bash scripts/cloudshell-replace-apply.sh
 ```
 
+적용 후 최신 private IP 기반 bastion wrapper를 다시 만들려면:
+
+```bash
+bash scripts/sync-bastion-wrappers.sh
+```
+
 기존 인스턴스를 재사용 중이거나 `k3s_bootstrap_token` 없이 apply한 경우에만 아래 수동 절차를 fallback으로 사용한다.
 
 ### Fallback: 수동 SSH bootstrap

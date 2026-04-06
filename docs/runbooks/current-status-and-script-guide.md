@@ -152,6 +152,24 @@
   - `phase3-kubectl-get-nodes.txt`
   - `phase3-kubectl-get-nodes-labels.txt`
 
+### `scripts/sync-bastion-wrappers.sh`
+
+- 목적:
+  - CloudShell에서 최신 Terraform output을 읽고 bastion `~/bin`에 node별 SSH wrapper를 재생성/업로드
+- 실행 위치:
+  - CloudShell, repo root
+- 전제:
+  - bastion SSH 접속 가능
+  - `terragrunt output -json` 또는 `artifacts/evidence/terragrunt-output.json` 존재
+- 결과:
+  - bastion `~/bin/server.sh`
+  - bastion `~/bin/app_1.sh`
+  - bastion `~/bin/app-1.sh`
+  - 기타 node별 wrapper
+- 주의:
+  - bastion 자체에 AWS credential이 없어도 동작한다
+  - IP 변경 시 이 스크립트를 다시 실행해 wrapper를 갱신한다
+
 ### `scripts/capture-phase-evidence.sh`
 
 - 목적:
@@ -176,8 +194,8 @@ CloudShell 기준 권장 순서는 아래다.
 2. `terragrunt/dev/inputs.hcl` 확인
 3. `bash scripts/cloudshell-plan.sh`
 4. `bash scripts/cloudshell-replace-apply.sh`
-5. bastion 접속 후 helper 경로 확인
-6. bastion에서 server private IP로 직접 SSH
+5. `bash scripts/sync-bastion-wrappers.sh`
+6. bastion 접속 후 `~/bin/server.sh` 또는 `~/bin/app-1.sh` 사용
 7. server에서 `sudo k3s kubectl get nodes -o wide`
 8. server에서 `sudo k3s kubectl get nodes --show-labels`
 9. 필요 시 `bash scripts/phase3-verify.sh`

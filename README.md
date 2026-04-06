@@ -41,6 +41,8 @@
   - server 기준 Phase 3 검증
 - `bash scripts/capture-phase-evidence.sh`
   - 현재 환경 기준 evidence / blocked 상태 저장
+- `bash scripts/sync-bastion-wrappers.sh`
+  - CloudShell output 기준으로 bastion `~/bin` wrapper 재생성/업로드
 
 권장 실행 순서:
 
@@ -48,8 +50,9 @@
 2. `terragrunt/dev/inputs.hcl` 확인
 3. `bash scripts/cloudshell-plan.sh`
 4. `bash scripts/cloudshell-replace-apply.sh`
-5. bastion / server 확인
-6. `bash scripts/phase3-verify.sh`
+5. `bash scripts/sync-bastion-wrappers.sh`
+6. bastion / server 확인
+7. `bash scripts/phase3-verify.sh`
 
 실패 이력, 현재 상태, 각 스크립트의 상세 설명은 [current-status-and-script-guide.md](/Users/len/Desktop/project/k8s/docs/runbooks/current-status-and-script-guide.md)를 본다.
 
