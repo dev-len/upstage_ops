@@ -68,12 +68,12 @@ SCRIPT
 chmod +x /opt/k3s-bootstrap/connect-node.sh
 
 for node_name in server app_1 app_2 metrics logs_traces db llm_obs clickhouse; do
-  cat >/opt/k3s-bootstrap/${node_name}.sh <<SCRIPT
+  cat >/opt/k3s-bootstrap/$${node_name}.sh <<SCRIPT
 #!/usr/bin/env bash
 set -euo pipefail
-exec /opt/k3s-bootstrap/connect-node.sh ${node_name} "\$@"
+exec /opt/k3s-bootstrap/connect-node.sh $${node_name} "\$@"
 SCRIPT
-  chmod +x /opt/k3s-bootstrap/${node_name}.sh
+  chmod +x /opt/k3s-bootstrap/$${node_name}.sh
 done
 
 cat >/etc/profile.d/k3s-bootstrap.sh <<'SCRIPT'

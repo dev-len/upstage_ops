@@ -22,14 +22,14 @@ join_csv() {
   fi
 
   IFS=',' read -r -a items <<< "$csv"
-  for item in "${items[@]}"; do
+  for item in "$${items[@]}"; do
     printf ' %s %q' "$flag" "$item"
   done
 }
 
 readonly NODE_TAINTS="$${K3S_NODE_TAINTS:-}"
 readonly AGENT_ARGS="$${K3S_AGENT_ARGS:-}"
-readonly INSTALL_EXEC="agent --node-name $${K3S_NODE_NAME}$$(join_csv "$K3S_NODE_LABELS" "--node-label")$$(join_csv "$NODE_TAINTS" "--node-taint") $${AGENT_ARGS}"
+readonly INSTALL_EXEC="agent --node-name $${K3S_NODE_NAME}$(join_csv "$${K3S_NODE_LABELS}" "--node-label")$(join_csv "$${NODE_TAINTS}" "--node-taint") $${AGENT_ARGS}"
 
 for _ in $(seq 1 60); do
   if curl -skf "https://$${K3S_SERVER_HOST}:6443/ping" >/dev/null 2>&1; then
