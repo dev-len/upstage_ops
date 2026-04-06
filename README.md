@@ -23,10 +23,35 @@
 - IaC 실행 경로: [iac-pipeline.md](/Users/len/Desktop/project/k8s/docs/tasks/iac-pipeline.md)
 - Cluster bring-up: [cluster-bring-up.md](/Users/len/Desktop/project/k8s/docs/runbooks/cluster-bring-up.md)
 - K3S auto bootstrap: [k3s-auto-bootstrap.md](/Users/len/Desktop/project/k8s/docs/runbooks/k3s-auto-bootstrap.md)
+- Current status and script guide: [current-status-and-script-guide.md](/Users/len/Desktop/project/k8s/docs/runbooks/current-status-and-script-guide.md)
 - Workload rollout: [workload-rollout.md](/Users/len/Desktop/project/k8s/docs/runbooks/workload-rollout.md)
 - Kubernetes manifests: [README.md](/Users/len/Desktop/project/k8s/kubernetes/README.md)
 - AI Gateway 검토: [007-document-envoy-ai-gateway-evaluation-boundary.md](/Users/len/Desktop/project/k8s/docs/adr/007-document-envoy-ai-gateway-evaluation-boundary.md)
 - Evidence artifacts: [README.md](/Users/len/Desktop/project/k8s/artifacts/evidence/README.md)
+
+## Script Guide
+
+루트 기준으로 가장 자주 쓰는 스크립트는 아래 4개다.
+
+- `bash scripts/cloudshell-plan.sh`
+  - CloudShell에서 `terragrunt plan`과 output 저장
+- `bash scripts/cloudshell-replace-apply.sh`
+  - bastion + 전체 node를 replace apply
+- `bash scripts/phase3-verify.sh`
+  - server 기준 Phase 3 검증
+- `bash scripts/capture-phase-evidence.sh`
+  - 현재 환경 기준 evidence / blocked 상태 저장
+
+권장 실행 순서:
+
+1. `git pull`
+2. `terragrunt/dev/inputs.hcl` 확인
+3. `bash scripts/cloudshell-plan.sh`
+4. `bash scripts/cloudshell-replace-apply.sh`
+5. bastion / server 확인
+6. `bash scripts/phase3-verify.sh`
+
+실패 이력, 현재 상태, 각 스크립트의 상세 설명은 [current-status-and-script-guide.md](/Users/len/Desktop/project/k8s/docs/runbooks/current-status-and-script-guide.md)를 본다.
 
 ## 실행 가이드
 

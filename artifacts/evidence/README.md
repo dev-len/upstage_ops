@@ -25,3 +25,4 @@
 
 - summary 템플릿: [`summary-template.md`](/Users/len/Desktop/project/k8s/artifacts/evidence/summary-template.md)
 - 증거 수집 스크립트: [`capture-phase-evidence.sh`](/Users/len/Desktop/project/k8s/scripts/capture-phase-evidence.sh)
+- 현재 상황과 실패 이력: [`current-status-and-script-guide.md`](/Users/len/Desktop/project/k8s/docs/runbooks/current-status-and-script-guide.md)

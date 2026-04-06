@@ -4,6 +4,8 @@
 - 작성일: 2026-04-06
 - 목적: K3S first-boot 자동 bootstrap의 입력, 동작 방식, 재적용 전략, 검증 기준을 한 곳에 고정한다.
 
+현재까지의 실제 진행 상황과 실패 이력은 [current-status-and-script-guide.md](/Users/len/Desktop/project/k8s/docs/runbooks/current-status-and-script-guide.md)를 본다.
+
 ## 1. 목적과 전제
 
 이 문서는 Terraform `apply` 이후 새로 생성되는 bastion과 K3S node가 사람 SSH 개입 없이 자동 초기화되는 경로를 설명한다.

@@ -4,6 +4,8 @@
 - 작성일: 2026-04-06
 - 목적: Phase 2 완료 증거부터 Phase 3 K3S bring-up까지의 실제 실행 순서를 고정한다.
 
+현재까지의 실제 실패 사례와 스크립트 선택 기준은 [current-status-and-script-guide.md](/Users/len/Desktop/project/k8s/docs/runbooks/current-status-and-script-guide.md)를 본다.
+
 ## 1. Phase 2 증거 확보
 
 CloudShell 또는 Terragrunt가 설치된 실행 환경에서 아래 순서로 수행한다.
