@@ -78,7 +78,10 @@ module "k3s_nodes" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "existing_server_ssh_from_bastion" {
-  count = local.use_existing_bastion_security_group ? 1 : 0
+  count = (
+    local.use_existing_bastion_security_group &&
+    var.manage_existing_bastion_ssh_ingress_rules
+  ) ? 1 : 0
 
   security_group_id            = var.existing_server_security_group_id
   referenced_security_group_id = var.existing_bastion_security_group_id
@@ -89,7 +92,10 @@ resource "aws_vpc_security_group_ingress_rule" "existing_server_ssh_from_bastion
 }
 
 resource "aws_vpc_security_group_ingress_rule" "existing_worker_ssh_from_bastion" {
-  count = local.use_existing_bastion_security_group ? 1 : 0
+  count = (
+    local.use_existing_bastion_security_group &&
+    var.manage_existing_bastion_ssh_ingress_rules
+  ) ? 1 : 0
 
   security_group_id            = var.existing_worker_shared_security_group_id
   referenced_security_group_id = var.existing_bastion_security_group_id

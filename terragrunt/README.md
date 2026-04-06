@@ -16,6 +16,8 @@ This directory is the environment entrypoint layer for Terraform modules in [ter
 1. Copy `dev/inputs.hcl.example` to `dev/inputs.hcl`.
 2. Fill in the real `vpc_id`, `admin_cidr`, `subnet_ids_by_az`, `ami_id`, and `key_name`.
    - If the account cannot create bootstrap security groups, pre-create them and set `existing_server_security_group_id`, `existing_worker_shared_security_group_id`, and `existing_bastion_security_group_id`.
+   - If those existing security groups already include `bastion -> server/worker : 22/tcp`, keep `manage_existing_bastion_ssh_ingress_rules = false` so Terraform does not try to create duplicate rules.
+   - Set `manage_existing_bastion_ssh_ingress_rules = true` only when Terraform should add the bastion-to-node SSH ingress rules itself.
    - CloudShell example:
      ```bash
      SERVER_SG_ID=$(aws ec2 create-security-group \
@@ -37,6 +39,7 @@ This directory is the environment entrypoint layer for Terraform modules in [ter
      ```hcl
      existing_server_security_group_id        = "sg-xxxxxxxxxxxxxxxxx"
      existing_worker_shared_security_group_id = "sg-xxxxxxxxxxxxxxxxx"
+     manage_existing_bastion_ssh_ingress_rules = false
      ```
 3. Review optional baseline inputs:
    - `primary_az`

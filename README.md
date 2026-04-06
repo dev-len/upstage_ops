@@ -121,6 +121,7 @@
     existing_server_security_group_id        = "sg-xxxxxxxxxxxxxxxxx"
     existing_worker_shared_security_group_id = "sg-xxxxxxxxxxxxxxxxx"
     existing_bastion_security_group_id       = "sg-xxxxxxxxxxxxxxxxx"
+    manage_existing_bastion_ssh_ingress_rules = false
     associate_public_ip_address              = false
     enable_bastion                           = true
     enable_storage                           = false
@@ -144,6 +145,7 @@
 - 현재 학습 계정에서는 `ec2:CreateVolume`도 불가하므로, 별도 EBS 대신 stateful 노드의 root volume 확장 경로를 사용한다
 - bastion을 제외한 private fleet는 public IP 없이 운영하는 것을 기본으로 둔다
 - bastion 외부 진입 포트만 `22022`로 바꾸고, private 노드 SSH는 `22`로 유지할 수 있다
+- 기존 SG에 이미 `bastion -> server/worker : 22/tcp` 규칙이 있으면 `manage_existing_bastion_ssh_ingress_rules = false`로 두어 duplicate rule 에러를 피한다
 
 ### 4. K3S bootstrap
 

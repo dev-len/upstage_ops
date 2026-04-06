@@ -73,6 +73,12 @@ variable "existing_bastion_security_group_id" {
   }
 }
 
+variable "manage_existing_bastion_ssh_ingress_rules" {
+  description = "Whether Terraform should create bastion-to-server/worker SSH ingress rules when existing security groups are injected."
+  type        = bool
+  default     = false
+}
+
 variable "subnet_ids_by_az" {
   type        = map(string)
   description = "Existing subnet IDs keyed by AZ. Subnets are not created by this configuration."
