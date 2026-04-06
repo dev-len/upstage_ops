@@ -12,7 +12,10 @@
 
 - `terragrunt-plan.txt`
 - `terragrunt-output.json`
+- `phase3-bastion-helper-check.txt`
 - `phase3-kubectl-get-nodes.txt`
+- `phase3-kubectl-get-nodes-labels.txt`
+- `phase3-server-kubeconfig-check.txt`
 - `phase4-monitoring-pods.txt`
 - `phase5-sample-httpbin-curl.txt`
 - `phase7-langfuse-pods.txt`

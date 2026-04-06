@@ -19,6 +19,7 @@
 - IaC 실행 경로: [iac-pipeline.md](/Users/len/Desktop/project/k8s/docs/tasks/iac-pipeline.md)
 - Terragrunt 진입점 문서: [README.md](/Users/len/Desktop/project/k8s/terragrunt/README.md)
 - Cluster bring-up runbook: [cluster-bring-up.md](/Users/len/Desktop/project/k8s/docs/runbooks/cluster-bring-up.md)
+- K3S auto bootstrap runbook: [k3s-auto-bootstrap.md](/Users/len/Desktop/project/k8s/docs/runbooks/k3s-auto-bootstrap.md)
 - Workload rollout runbook: [workload-rollout.md](/Users/len/Desktop/project/k8s/docs/runbooks/workload-rollout.md)
 - Phase evidence checklist: [phase-evidence.md](/Users/len/Desktop/project/k8s/docs/runbooks/phase-evidence.md)
 

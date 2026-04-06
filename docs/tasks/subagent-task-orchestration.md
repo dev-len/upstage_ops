@@ -33,6 +33,7 @@
 - `T3`: 7노드 EC2 baseline 모듈과 dev wiring
 - `T4`: `volume_definitions` 기반 storage 모듈과 dev wiring
 - `T5`: `bootstrap/k3s` 아래 server/agent bootstrap 자산
+- `T5`: first-boot K3S auto bootstrap 방향과 fallback 수동 bootstrap 자산
 - `T6`: `deployments/observability`, `deployments/langfuse` values
 - `T7`: 공통 검증/보안/리뷰 기준 문서
 - `T8`: IaC pipeline 문서와 GitHub Actions skeleton
@@ -41,6 +42,8 @@
 
 - 실제 CloudShell `terragrunt plan` 성공 증거
 - 실제 K3S bring-up 결과
+- post-apply verification 경로
+- server kubeconfig handoff 경로
 - `kubernetes/` 기준 workload 레이어의 실제 적용 증거
 - 샘플 앱 외부 응답 검증
 - observability / Langfuse 실배포 증거
@@ -262,9 +265,11 @@
 - 목적:
   - EC2 노드가 server/agent 역할에 맞게 K3S 클러스터로 조립되도록 bootstrap 흐름을 만든다.
 - 방향성:
+  - 기본 경로는 first-boot 자동 bootstrap
   - server 1대, agent N대 구조
   - 역할 라벨/taint를 7노드 기준으로 부여할 수 있어야 한다
   - Terraform과 쿠버네티스 매니페스트를 한 파일에 섞지 않는다
+  - 수동 SSH bootstrap은 fallback으로만 유지한다
 - 권장 skill:
   - `kubernetes-specialist`
 - 권장 subagent role:
@@ -283,8 +288,10 @@
   - 역할별 라벨링 규칙
   - 역할별 taint 규칙
 - 완료 기준:
+  - first-boot 자동 설치/join 경로가 문서와 코드에 반영된다.
   - 7노드 역할 분리를 위한 node labeling 전략이 문서/스크립트에 반영된다.
   - bootstrap 책임과 Terraform 책임이 분리된다.
+  - post-apply verification과 kubeconfig handoff 기준이 정의된다.
 - handoff to next:
   - `T6`, `T8`
 

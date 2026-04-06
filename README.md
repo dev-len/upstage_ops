@@ -22,6 +22,7 @@
 - 검증 기준: [validation-baseline.md](/Users/len/Desktop/project/k8s/docs/tasks/validation-baseline.md)
 - IaC 실행 경로: [iac-pipeline.md](/Users/len/Desktop/project/k8s/docs/tasks/iac-pipeline.md)
 - Cluster bring-up: [cluster-bring-up.md](/Users/len/Desktop/project/k8s/docs/runbooks/cluster-bring-up.md)
+- K3S auto bootstrap: [k3s-auto-bootstrap.md](/Users/len/Desktop/project/k8s/docs/runbooks/k3s-auto-bootstrap.md)
 - Workload rollout: [workload-rollout.md](/Users/len/Desktop/project/k8s/docs/runbooks/workload-rollout.md)
 - Kubernetes manifests: [README.md](/Users/len/Desktop/project/k8s/kubernetes/README.md)
 - AI Gateway 검토: [007-document-envoy-ai-gateway-evaluation-boundary.md](/Users/len/Desktop/project/k8s/docs/adr/007-document-envoy-ai-gateway-evaluation-boundary.md)
@@ -39,13 +40,17 @@
    - `ami_id`
    - `key_name`
 3. 필요하면 baseline 입력도 조정한다.
-   - `primary_az`
-   - `instance_type`
-   - `associate_public_ip_address`
-   - `enable_bastion`
-   - `bastion_instance_type`
-   - `bastion_associate_public_ip_address`
-   - `enable_storage`
+  - `primary_az`
+  - `instance_type`
+  - `associate_public_ip_address`
+  - `enable_bastion`
+  - `bootstrap_bastion_helpers`
+  - `k3s_bootstrap_token`
+  - `k3s_server_extra_args`
+  - `k3s_agent_extra_args_by_role`
+  - `bastion_instance_type`
+  - `bastion_associate_public_ip_address`
+  - `enable_storage`
    - `root_volume_size_gb`
    - `root_volume_type`
    - `db_root_volume_size_gb`, `llm_obs_root_volume_size_gb`, `clickhouse_root_volume_size_gb`
@@ -134,6 +139,23 @@
 6. 결과를 검토한다.
 7. 수동 승인 후 `terragrunt apply`를 실행한다.
 
+자동 bootstrap을 쓰려면 추가로 아래를 설정한다.
+
+```hcl
+bootstrap_bastion_helpers = true
+k3s_bootstrap_token       = "replace-me-with-a-shared-token"
+```
+
+이 설정이 있으면:
+
+- bastion은 첫 부팅에서 `/opt/k3s-bootstrap` 아래 helper를 자동 설치한다
+- server/worker node는 첫 부팅에서 K3S를 자동 설치한다
+
+주의:
+
+- 이미 떠 있는 인스턴스는 `user_data`를 다시 실행하지 않는다
+- 이미 생성된 인스턴스에 이 자동화를 반영하려면 `-replace` 또는 재생성이 필요하다
+
 주의:
 
 - 장시간 실행은 `tmux` 사용
@@ -149,12 +171,20 @@
 
 ### 4. K3S bootstrap
 
-Terraform 적용 후 K3S bootstrap은 Terraform 밖에서 수행한다.
+기본 경로는 first-boot 자동 bootstrap이다.
+
+- 기준 문서: [k3s-auto-bootstrap.md](/Users/len/Desktop/project/k8s/docs/runbooks/k3s-auto-bootstrap.md)
+- 실행/검증 순서: [cluster-bring-up.md](/Users/len/Desktop/project/k8s/docs/runbooks/cluster-bring-up.md)
+
+Terraform 적용 후 수동 K3S bootstrap은 fallback으로만 사용한다.
 
 - bootstrap 자산: [README.md](/Users/len/Desktop/project/k8s/bootstrap/k3s/README.md)
 - bastion helper 자산: [README.md](/Users/len/Desktop/project/k8s/bootstrap/bastion/README.md)
 - server script: [server-init.sh](/Users/len/Desktop/project/k8s/bootstrap/k3s/server-init.sh)
 - agent script: [agent-init.sh](/Users/len/Desktop/project/k8s/bootstrap/k3s/agent-init.sh)
+
+`k3s_bootstrap_token`을 설정한 경우에는 위 스크립트가 EC2 `user_data` 경로로 자동 실행된다.
+수동 bootstrap은 기존 인스턴스를 재사용하거나 자동화 없이 점진 확인할 때만 사용한다.
 
 Terraform 출력 중 아래가 직접 handoff 된다.
 

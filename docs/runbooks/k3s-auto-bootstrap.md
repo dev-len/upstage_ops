@@ -1,0 +1,180 @@
+# K3S Auto Bootstrap Runbook
+
+- 문서 상태: Draft
+- 작성일: 2026-04-06
+- 목적: K3S first-boot 자동 bootstrap의 입력, 동작 방식, 재적용 전략, 검증 기준을 한 곳에 고정한다.
+
+## 1. 목적과 전제
+
+이 문서는 Terraform `apply` 이후 새로 생성되는 bastion과 K3S node가 사람 SSH 개입 없이 자동 초기화되는 경로를 설명한다.
+
+자동화 대상:
+
+- bastion helper 자동 설치
+- server node K3S server 자동 설치
+- worker node K3S agent 자동 join
+- role별 label / taint 자동 적용
+
+자동화 비대상:
+
+- 이미 실행 중인 기존 인스턴스
+- Helm chart 설치
+- observability / Langfuse workload 배포
+- evidence 후속 해석 자동화
+
+## 2. 입력 변수와 기본값
+
+자동 bootstrap 관련 핵심 입력은 아래다.
+
+- `bootstrap_bastion_helpers = true`
+  - bastion 첫 부팅에서 `/opt/k3s-bootstrap` helper 설치
+- `k3s_bootstrap_token = "<shared-token>"`
+  - server / worker first-boot K3S 설치 활성화
+- `k3s_server_extra_args = ""`
+  - server install 추가 인자
+- `k3s_agent_extra_args_by_role = {}`
+  - 역할별 agent install 추가 인자
+- `manage_existing_bastion_ssh_ingress_rules = false`
+  - 기존 SG 주입 경로에서 duplicate SSH rule 회피
+
+권장 기본값:
+
+```hcl
+bootstrap_bastion_helpers                 = true
+manage_existing_bastion_ssh_ingress_rules = false
+k3s_bootstrap_token                       = "replace-me-with-a-shared-token"
+```
+
+## 3. 새 인스턴스 기준 동작 흐름
+
+### Bastion
+
+- Terraform이 bastion instance를 생성한다.
+- bastion `user_data`가 `/opt/k3s-bootstrap` 아래 helper를 설치한다.
+- helper는 EC2 `Name` 태그 기준으로 private node의 최신 private IP를 조회한다.
+
+### Server
+
+- server node first boot에서 K3S server 설치가 실행된다.
+- `topology.k3s.io/role=server` label이 적용된다.
+- `k3s_server_extra_args`가 있으면 install 명령 뒤에 추가된다.
+
+### Worker
+
+- worker node first boot에서 K3S agent 설치가 실행된다.
+- agent는 server private IP 기준으로 API 응답을 기다린 뒤 join을 시도한다.
+- role별 label과 infra 전용 taint가 자동 적용된다.
+
+기본 role 매핑:
+
+- `app` -> `topology.k3s.io/role=app`
+- `metrics` -> `topology.k3s.io/role=metrics`, `dedicated=metrics:NoSchedule`
+- `logs_traces` -> `topology.k3s.io/role=logs-traces`, `dedicated=logs-traces:NoSchedule`
+- `db` -> `topology.k3s.io/role=db`, `dedicated=db:NoSchedule`
+- `llm_obs` -> `topology.k3s.io/role=llm-obs`, `dedicated=llm-obs:NoSchedule`
+- `clickhouse` -> `topology.k3s.io/role=clickhouse`, `dedicated=clickhouse:NoSchedule`
+
+## 4. 기존 인스턴스에 바로 안 붙는 이유
+
+EC2 `user_data`는 기본적으로 첫 부팅 시점에 실행된다.
+따라서 이미 생성되어 실행 중인 bastion / node는 `bootstrap_bastion_helpers`나 `k3s_bootstrap_token`을 나중에 넣어도 자동으로 새 bootstrap을 받지 않는다.
+
+즉:
+
+- 입력값 추가만으로는 충분하지 않다
+- 인스턴스 재생성 또는 `-replace`가 필요하다
+
+## 5. 재적용 전략
+
+### Bastion만 교체
+
+bastion helper 자동 설치만 반영하려면:
+
+```bash
+cd terragrunt/dev
+terragrunt apply -replace='aws_instance.bastion[0]'
+```
+
+### 전체 node 교체
+
+K3S first-boot bootstrap까지 새 경로를 반영하려면:
+
+```bash
+cd terragrunt/dev
+terragrunt apply \
+  -replace='aws_instance.bastion[0]' \
+  -replace='module.k3s_nodes.aws_instance.node["server"]' \
+  -replace='module.k3s_nodes.aws_instance.node["app_1"]' \
+  -replace='module.k3s_nodes.aws_instance.node["app_2"]' \
+  -replace='module.k3s_nodes.aws_instance.node["metrics"]' \
+  -replace='module.k3s_nodes.aws_instance.node["logs_traces"]' \
+  -replace='module.k3s_nodes.aws_instance.node["db"]' \
+  -replace='module.k3s_nodes.aws_instance.node["llm_obs"]' \
+  -replace='module.k3s_nodes.aws_instance.node["clickhouse"]'
+```
+
+기존 SG 주입 경로에서는 아래를 유지한다.
+
+```hcl
+manage_existing_bastion_ssh_ingress_rules = false
+```
+
+## 6. Apply 후 검증
+
+### Bastion helper 확인
+
+```bash
+ssh -p 22022 ubuntu@${BASTION_PUBLIC_IP}
+ls -la /opt/k3s-bootstrap
+```
+
+### Node Ready 확인
+
+server kubeconfig를 사용해 아래를 확인한다.
+
+```bash
+kubectl get nodes -o wide
+kubectl get nodes --show-labels
+```
+
+### 기대 결과
+
+- bastion에 `/opt/k3s-bootstrap` 존재
+- 전체 node가 `Ready`
+- role label이 역할별로 일치
+- infra node taint가 적용
+
+## 7. 흔한 실패 패턴
+
+- `user_data` 미반영
+  - 기존 인스턴스를 재사용 중인데 `-replace`를 하지 않음
+- duplicate SG rule
+  - 기존 SG에 이미 bastion -> server/worker `22/tcp` 규칙이 있는데 Terraform이 다시 만들려 함
+- agent join 실패
+  - server API 미응답
+  - `k3s_bootstrap_token` 불일치
+- bastion helper 실패
+  - AWS CLI 권한 부족
+  - EC2 `Name` 태그 규칙 불일치
+
+## 8. 로그와 evidence
+
+Phase 3에서 최소로 남길 증거는 아래다.
+
+- bastion helper 설치 확인 결과
+- `kubectl get nodes -o wide`
+- `kubectl get nodes --show-labels`
+- server / worker bootstrap 로그 위치
+- kubeconfig 확보 여부
+
+기본 저장 위치:
+
+- `artifacts/evidence/phase3-bastion-helper-check.txt`
+- `artifacts/evidence/phase3-kubectl-get-nodes.txt`
+- `artifacts/evidence/phase3-kubectl-get-nodes-labels.txt`
+- `artifacts/evidence/summary.md`
+
+관련 문서:
+
+- [cluster-bring-up.md](/Users/len/Desktop/project/k8s/docs/runbooks/cluster-bring-up.md)
+- [phase-evidence.md](/Users/len/Desktop/project/k8s/docs/runbooks/phase-evidence.md)

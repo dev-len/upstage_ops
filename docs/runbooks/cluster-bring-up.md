@@ -47,10 +47,26 @@ terragrunt output -json | tee ../../artifacts/evidence/terragrunt-output.json
 
 ## 3. Bastion 경유 K3S bootstrap
 
+`k3s_bootstrap_token`이 설정된 새 인스턴스라면, 이 단계 대부분은 첫 부팅 `user_data`에서 자동 수행된다.
+이 경우 사람은 bastion 접속 후 helper 경로와 `kubectl get nodes` 결과만 확인하면 된다.
+
+자동 bootstrap 운영 기준과 `-replace` 전략은 [k3s-auto-bootstrap.md](/Users/len/Desktop/project/k8s/docs/runbooks/k3s-auto-bootstrap.md)를 우선 기준으로 본다.
+
 1. bastion에 접속한다.
-2. server 노드에서 `server-init.sh`를 실행한다.
-3. worker 노드별로 `agent-init.sh`를 실행한다.
-4. infra 전용 노드에는 권장 taint를 부여한다.
+2. `/opt/k3s-bootstrap` helper 경로를 확인한다.
+3. server kubeconfig 기준으로 `kubectl get nodes`를 확인한다.
+4. 필요하면 evidence 파일을 저장한다.
+
+자동화 경로 확인:
+
+```bash
+ssh -p 22022 ubuntu@${BASTION_PUBLIC_IP}
+ls -la /opt/k3s-bootstrap
+```
+
+기존 인스턴스를 재사용 중이거나 `k3s_bootstrap_token` 없이 apply한 경우에만 아래 수동 절차를 fallback으로 사용한다.
+
+### Fallback: 수동 SSH bootstrap
 
 예시:
 
@@ -91,8 +107,8 @@ bash scripts/bootstrap-k3s-role.sh agent metrics 'topology.k3s.io/role=metrics' 
 server 노드에서 아래 증거를 남긴다.
 
 ```bash
-kubectl get nodes -o wide | tee ~/phase3-kubectl-get-nodes.txt
-kubectl get nodes --show-labels | tee ~/phase3-kubectl-get-nodes-labels.txt
+kubectl get nodes -o wide | tee artifacts/evidence/phase3-kubectl-get-nodes.txt
+kubectl get nodes --show-labels | tee artifacts/evidence/phase3-kubectl-get-nodes-labels.txt
 ```
 
 완료 기준:

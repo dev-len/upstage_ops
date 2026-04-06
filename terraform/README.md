@@ -78,6 +78,8 @@ The current Terraform code does not model the full 7-node topology yet.
   - worker-shared SG
   - optional bastion instance and bastion SG path
   - baseline EC2 layout for server/app/metrics/logs-traces/db/llm-obs/clickhouse roles
+  - optional bastion helper installation via `user_data`
+  - optional first-boot K3S bootstrap via `k3s_bootstrap_token`
   - optional EBS volume and attachment layer for db / llm-obs / clickhouse
 - not modeled yet:
   - role-specific security groups

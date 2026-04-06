@@ -12,9 +12,12 @@
 
 ## Phase 3
 
+- bastion helper 설치 확인 (`/opt/k3s-bootstrap`)
 - `kubectl get nodes -o wide`
 - `kubectl get nodes --show-labels`
 - server/worker bootstrap 실행 로그
+- cloud-init / `user_data` 성공 여부
+- server kubeconfig 확보 여부
 
 ## Phase 4
 

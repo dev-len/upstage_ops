@@ -41,11 +41,17 @@ This directory is the environment entrypoint layer for Terraform modules in [ter
      existing_worker_shared_security_group_id = "sg-xxxxxxxxxxxxxxxxx"
      manage_existing_bastion_ssh_ingress_rules = false
      ```
-3. Review optional baseline inputs:
+3. Review bootstrap-first baseline inputs:
+   - `enable_bastion`
+   - `bootstrap_bastion_helpers`
+   - `k3s_bootstrap_token`
+   - `k3s_server_extra_args`
+   - `k3s_agent_extra_args_by_role`
+   - `manage_existing_bastion_ssh_ingress_rules`
+4. Review optional infrastructure baseline inputs:
    - `primary_az`
    - `instance_type`
    - `associate_public_ip_address`
-   - `enable_bastion`
    - `bastion_instance_type`
    - `bastion_subnet_id`
    - `bastion_associate_public_ip_address`
@@ -56,7 +62,7 @@ This directory is the environment entrypoint layer for Terraform modules in [ter
    - `db_root_volume_size_gb`, `llm_obs_root_volume_size_gb`, `clickhouse_root_volume_size_gb`
    - `db_*`, `llm_obs_*`, `clickhouse_*` storage inputs
    - `node_definitions` if logical node names or placement must change
-3. In AWS CloudShell, move cache paths to `/tmp` before running validation or plan:
+5. In AWS CloudShell, move cache paths to `/tmp` before running validation or plan:
    ```bash
    mkdir -p /tmp/.terragrunt-cache
    mkdir -p /tmp/.terraform-plugin-cache
@@ -64,7 +70,7 @@ This directory is the environment entrypoint layer for Terraform modules in [ter
    export TG_DOWNLOAD_DIR="/tmp/.terragrunt-cache"
    export TF_PLUGIN_CACHE_DIR="/tmp/.terraform-plugin-cache"
    ```
-4. Run Terragrunt from `terragrunt/dev`.
+6. Run Terragrunt from `terragrunt/dev`.
 
 ## Notes
 
@@ -77,6 +83,10 @@ This directory is the environment entrypoint layer for Terraform modules in [ter
 - In the training account, bootstrap security-group outbound must be left unmanaged because any Terraform-managed egress update triggers `ec2:RevokeSecurityGroupEgress`, which is denied by policy.
 - The bootstrap SG module therefore ignores `egress` drift on create/update and only manages ingress rules when SGs are Terraform-managed.
 - For the learning-account override path, use a manually created bastion SG and let Terraform manage the bastion instance plus bastion->node SSH ingress rules.
+- When `bootstrap_bastion_helpers = true`, the bastion installs helper scripts under `/opt/k3s-bootstrap` on first boot.
+- When `k3s_bootstrap_token` is set, the server and agent nodes install K3S automatically on first boot using role-aware labels and taints.
+- Existing running instances do not re-run `user_data`; recreate or replace them if you want to apply the new bootstrap automation to instances that already exist.
+- Automatic bootstrap is the default operating path; manual SSH bootstrap is a fallback for existing instances or staged debugging.
 - In the training account, prefer `enable_storage = false` because `ec2:CreateVolume` may also be denied.
 - When storage is disabled, grow the root volume for `db`, `llm_obs`, and `clickhouse` instead of provisioning separate EBS volumes.
 - Validation and review expectations are defined in [validation-baseline.md](/Users/len/Desktop/project/k8s/docs/tasks/validation-baseline.md).
