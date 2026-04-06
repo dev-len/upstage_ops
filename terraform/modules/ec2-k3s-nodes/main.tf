@@ -16,6 +16,11 @@ locals {
     name => "topology.k3s.io/role=${replace(definition.role, "_", "-")}"
   }
 
+  runtime_node_names = {
+    for name, definition in var.node_definitions :
+    name => replace(name, "_", "-")
+  }
+
   node_role_taints = {
     for name, definition in var.node_definitions :
     name => (
@@ -42,7 +47,7 @@ resource "aws_instance" "server" {
 
   user_data = var.k3s_bootstrap_token == null ? null : templatefile("${path.module}/templates/server-user-data.sh.tftpl", {
     k3s_token       = var.k3s_bootstrap_token
-    k3s_node_name   = local.server_node_name
+    k3s_node_name   = local.runtime_node_names[local.server_node_name]
     k3s_node_labels = local.node_role_labels[local.server_node_name]
     k3s_node_taints = local.node_role_taints[local.server_node_name]
     k3s_server_args = var.k3s_server_extra_args
@@ -85,7 +90,7 @@ resource "aws_instance" "node" {
   user_data = var.k3s_bootstrap_token == null ? null : templatefile("${path.module}/templates/agent-user-data.sh.tftpl", {
     k3s_server_host = aws_instance.server.private_ip
     k3s_token       = var.k3s_bootstrap_token
-    k3s_node_name   = each.key
+    k3s_node_name   = local.runtime_node_names[each.key]
     k3s_node_labels = local.node_role_labels[each.key]
     k3s_node_taints = local.node_role_taints[each.key]
     k3s_agent_args  = lookup(var.k3s_agent_extra_args_by_role, each.value.role, "")

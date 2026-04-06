@@ -105,6 +105,19 @@
   - worker별 `k3s-agent` 상태
   - worker cloud-init/user_data 실패 여부
 
+### worker node 이름 RFC 1123 위반
+
+- 증상:
+  - `Node "app_1" is invalid`
+  - `Node "app_2" is invalid`
+  - `Node "logs_traces" is invalid`
+  - `Node "llm_obs" is invalid`
+- 원인:
+  - Kubernetes node name은 `_`를 허용하지 않는데, 자동 bootstrap이 Terraform logical name을 그대로 `--node-name`에 넘김
+- 조치:
+  - Terraform logical name과 별도로 K3S runtime node name을 `_ -> -`로 정규화
+  - 예: `app_1 -> app-1`, `logs_traces -> logs-traces`, `llm_obs -> llm-obs`
+
 ## 3. 스크립트 가이드
 
 ### `scripts/cloudshell-plan.sh`

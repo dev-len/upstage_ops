@@ -66,6 +66,7 @@ k3s_bootstrap_token                       = "replace-me-with-a-shared-token"
 - worker node first boot에서 K3S agent 설치가 실행된다.
 - agent는 server private IP 기준으로 API 응답을 기다린 뒤 join을 시도한다.
 - role별 label과 infra 전용 taint가 자동 적용된다.
+- Kubernetes runtime node name은 RFC 1123 규칙을 따르기 위해 logical name의 `_`를 `-`로 정규화해서 사용한다.
 
 기본 role 매핑:
 
