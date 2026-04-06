@@ -10,3 +10,12 @@ AGENTS.md
 
 # Terraform local working directories
 .terraform/
+
+# Local Terragrunt environment inputs
+terragrunt/dev/inputs.hcl
+
+# Generated evidence outputs
+artifacts/evidence/*.txt
+artifacts/evidence/*.json
+artifacts/evidence/summary.md
+artifacts/evidence/index.txt

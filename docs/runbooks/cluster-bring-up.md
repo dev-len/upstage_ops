@@ -64,6 +64,12 @@ ssh -p 22022 ubuntu@${BASTION_PUBLIC_IP}
 ls -la /opt/k3s-bootstrap
 ```
 
+전체 node 교체 적용은 아래 스크립트를 기본으로 사용한다.
+
+```bash
+bash scripts/cloudshell-replace-apply.sh
+```
+
 기존 인스턴스를 재사용 중이거나 `k3s_bootstrap_token` 없이 apply한 경우에만 아래 수동 절차를 fallback으로 사용한다.
 
 ### Fallback: 수동 SSH bootstrap
@@ -107,8 +113,7 @@ bash scripts/bootstrap-k3s-role.sh agent metrics 'topology.k3s.io/role=metrics' 
 server 노드에서 아래 증거를 남긴다.
 
 ```bash
-kubectl get nodes -o wide | tee artifacts/evidence/phase3-kubectl-get-nodes.txt
-kubectl get nodes --show-labels | tee artifacts/evidence/phase3-kubectl-get-nodes-labels.txt
+bash scripts/phase3-verify.sh
 ```
 
 완료 기준:

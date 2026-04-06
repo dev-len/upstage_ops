@@ -155,6 +155,7 @@ k3s_bootstrap_token       = "replace-me-with-a-shared-token"
 
 - 이미 떠 있는 인스턴스는 `user_data`를 다시 실행하지 않는다
 - 이미 생성된 인스턴스에 이 자동화를 반영하려면 `-replace` 또는 재생성이 필요하다
+- 실제 적용은 `bash scripts/cloudshell-replace-apply.sh`를 기본으로 사용한다
 
 주의:
 

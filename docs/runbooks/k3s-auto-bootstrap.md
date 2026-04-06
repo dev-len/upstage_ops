@@ -100,17 +100,7 @@ terragrunt apply -replace='aws_instance.bastion[0]'
 K3S first-boot bootstrap까지 새 경로를 반영하려면:
 
 ```bash
-cd terragrunt/dev
-terragrunt apply \
-  -replace='aws_instance.bastion[0]' \
-  -replace='module.k3s_nodes.aws_instance.node["server"]' \
-  -replace='module.k3s_nodes.aws_instance.node["app_1"]' \
-  -replace='module.k3s_nodes.aws_instance.node["app_2"]' \
-  -replace='module.k3s_nodes.aws_instance.node["metrics"]' \
-  -replace='module.k3s_nodes.aws_instance.node["logs_traces"]' \
-  -replace='module.k3s_nodes.aws_instance.node["db"]' \
-  -replace='module.k3s_nodes.aws_instance.node["llm_obs"]' \
-  -replace='module.k3s_nodes.aws_instance.node["clickhouse"]'
+bash scripts/cloudshell-replace-apply.sh
 ```
 
 기존 SG 주입 경로에서는 아래를 유지한다.
@@ -133,8 +123,7 @@ ls -la /opt/k3s-bootstrap
 server kubeconfig를 사용해 아래를 확인한다.
 
 ```bash
-kubectl get nodes -o wide
-kubectl get nodes --show-labels
+bash scripts/phase3-verify.sh
 ```
 
 ### 기대 결과
