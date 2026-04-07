@@ -19,3 +19,7 @@ artifacts/evidence/*.txt
 artifacts/evidence/*.json
 artifacts/evidence/summary.md
 artifacts/evidence/index.txt
+
+# CloudShell one-shot runtime inputs
+.cloudshell/secrets/*.yaml
+!.cloudshell/secrets/*.example.yaml

@@ -52,6 +52,12 @@ terragrunt output -json | tee ../../artifacts/evidence/terragrunt-output.json
 `k3s_bootstrap_token`이 설정된 새 인스턴스라면, 이 단계 대부분은 첫 부팅 `user_data`에서 자동 수행된다.
 이 경우 사람은 bastion 접속 후 helper 경로와 `kubectl get nodes` 결과만 확인하면 된다.
 
+CloudShell 표준 경로는 수동 단계보다 one-shot을 우선한다.
+
+```bash
+SSH_IDENTITY_FILE=~/.ssh/k3s-dev-key.pem bash scripts/cloudshell-bootstrap-all.sh
+```
+
 자동 bootstrap 운영 기준과 `-replace` 전략은 [k3s-auto-bootstrap.md](/Users/len/Desktop/project/k8s/docs/runbooks/k3s-auto-bootstrap.md)를 우선 기준으로 본다.
 
 1. bastion에 접속한다.
@@ -77,6 +83,8 @@ bash scripts/cloudshell-replace-apply.sh
 ```bash
 bash scripts/sync-bastion-wrappers.sh
 ```
+
+one-shot은 IP가 변할 수 있다는 전제를 두고 apply 이후 output/AWS 조회로 최신 IP를 다시 해석한다.
 
 기존 인스턴스를 재사용 중이거나 `k3s_bootstrap_token` 없이 apply한 경우에만 아래 수동 절차를 fallback으로 사용한다.
 
@@ -129,6 +137,7 @@ bash scripts/phase3-verify.sh
 - 전체 노드가 `Ready`
 - `topology.k3s.io/role` 라벨이 역할별로 보임
 - infra 전용 노드 taint가 적용됨
+- worker 전체 `Ready`가 아니면 workload 단계로 가지 않음
 
 ## 5. 후속 handoff
 

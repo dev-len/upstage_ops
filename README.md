@@ -13,6 +13,7 @@
 - Kubernetes workload layer
 - Terragrunt dev entrypoint
 - IaC validation / pipeline 문서
+- CloudShell one-shot bootstrap orchestration
 
 ## 시작점
 
@@ -25,6 +26,8 @@
 - K3S auto bootstrap: [k3s-auto-bootstrap.md](/Users/len/Desktop/project/k8s/docs/runbooks/k3s-auto-bootstrap.md)
 - Current status and script guide: [current-status-and-script-guide.md](/Users/len/Desktop/project/k8s/docs/runbooks/current-status-and-script-guide.md)
 - Workload rollout: [workload-rollout.md](/Users/len/Desktop/project/k8s/docs/runbooks/workload-rollout.md)
+- CloudShell one-shot: [cloudshell-one-shot-bootstrap.md](/Users/len/Desktop/project/k8s/docs/runbooks/cloudshell-one-shot-bootstrap.md)
+- Secret 계약: [secret-supply-contract.md](/Users/len/Desktop/project/k8s/docs/runbooks/secret-supply-contract.md)
 - Kubernetes manifests: [README.md](/Users/len/Desktop/project/k8s/kubernetes/README.md)
 - AI Gateway 검토: [007-document-envoy-ai-gateway-evaluation-boundary.md](/Users/len/Desktop/project/k8s/docs/adr/007-document-envoy-ai-gateway-evaluation-boundary.md)
 - Evidence artifacts: [README.md](/Users/len/Desktop/project/k8s/artifacts/evidence/README.md)
@@ -41,6 +44,12 @@
   - server 기준 Phase 3 검증
 - `bash scripts/capture-phase-evidence.sh`
   - 현재 환경 기준 evidence / blocked 상태 저장
+- `bash scripts/cloudshell-k3s-check.sh`
+  - CloudShell에서 terragrunt output 또는 AWS 조회 후 bastion 경유 K3S 상태를 자동 확인
+- `bash scripts/cloudshell-workload-rollout.sh`
+  - K8S Secret 확인 후 platform/app apply와 Helm release rollout 실행
+- `bash scripts/cloudshell-bootstrap-all.sh`
+  - CloudShell에서 one-shot으로 infra, K3S, Secret, workload, wrapper, evidence까지 실행
 - `bash scripts/sync-bastion-wrappers.sh`
   - CloudShell output 기준으로 bastion `~/bin` wrapper 재생성/업로드
 
@@ -48,11 +57,8 @@
 
 1. `git pull`
 2. `terragrunt/dev/inputs.hcl` 확인
-3. `bash scripts/cloudshell-plan.sh`
-4. `bash scripts/cloudshell-replace-apply.sh`
-5. `bash scripts/sync-bastion-wrappers.sh`
-6. bastion / server 확인
-7. `bash scripts/phase3-verify.sh`
+3. `.cloudshell/secrets/*.yaml` 준비
+4. `SSH_IDENTITY_FILE=~/.ssh/k3s-dev-key.pem bash scripts/cloudshell-bootstrap-all.sh`
 
 실패 이력, 현재 상태, 각 스크립트의 상세 설명은 [current-status-and-script-guide.md](/Users/len/Desktop/project/k8s/docs/runbooks/current-status-and-script-guide.md)를 본다.
 
@@ -167,6 +173,12 @@
 6. 결과를 검토한다.
 7. 수동 승인 후 `terragrunt apply`를 실행한다.
 
+CloudShell 표준 경로는 위 수동 단계를 개별로 밟는 대신 one-shot 스크립트를 우선 사용한다.
+
+```bash
+SSH_IDENTITY_FILE=~/.ssh/k3s-dev-key.pem bash scripts/cloudshell-bootstrap-all.sh
+```
+
 자동 bootstrap을 쓰려면 추가로 아래를 설정한다.
 
 ```hcl
@@ -199,6 +211,9 @@ k3s_bootstrap_token       = "replace-me-with-a-shared-token"
 - bastion을 제외한 private fleet는 public IP 없이 운영하는 것을 기본으로 둔다
 - bastion 외부 진입 포트만 `22022`로 바꾸고, private 노드 SSH는 `22`로 유지할 수 있다
 - 기존 SG에 이미 `bastion -> server/worker : 22/tcp` 규칙이 있으면 `manage_existing_bastion_ssh_ingress_rules = false`로 두어 duplicate rule 에러를 피한다
+- EIP를 사용하지 않으므로 bastion public IP와 node private IP는 apply 후 변동될 수 있다
+- IP는 고정값으로 메모하지 말고, `terragrunt output` 또는 AWS tag 조회로 매 실행 다시 해석한다
+- 기본 state 전략은 CloudShell local state이며, 세션 손실 후에는 AWS tag 조회 fallback을 사용한다
 
 ### 4. K3S bootstrap
 
@@ -229,6 +244,8 @@ Terraform 출력 중 아래가 직접 handoff 된다.
 
 표준 접속 경로는 `local/CloudShell -> bastion -> private nodes`다.
 private node 접속은 고정 IP 대신 EC2 `Name` 태그 조회 기반 helper script를 bastion에서 실행하는 것을 기본으로 둔다.
+CloudShell에서는 `SSH_IDENTITY_FILE=~/.ssh/k3s-dev-key.pem bash scripts/cloudshell-k3s-check.sh`로 출력 조회, bastion/server 식별, K3S 상태 확인, evidence 저장까지 한 번에 실행할 수 있다.
+one-shot 기준에서는 `scripts/cloudshell-bootstrap-all.sh`가 K3S 전체 `Ready`를 최대 20분 동안 대기하고, timeout 시 worker diagnostics를 저장한 뒤 workload 단계로 넘어가지 않는다.
 
 ### 5. Workload 배치
 
@@ -236,6 +253,8 @@ K3S bootstrap 이후 observability / Langfuse 배치는 별도 values를 기준�
 
 - observability: [README.md](/Users/len/Desktop/project/k8s/deployments/observability/README.md)
 - langfuse: [README.md](/Users/len/Desktop/project/k8s/deployments/langfuse/README.md)
+- 실제 Secret 공급 계약: [secret-supply-contract.md](/Users/len/Desktop/project/k8s/docs/runbooks/secret-supply-contract.md)
+- one-shot 운영 문서: [cloudshell-one-shot-bootstrap.md](/Users/len/Desktop/project/k8s/docs/runbooks/cloudshell-one-shot-bootstrap.md)
 - kubernetes workload layer: [README.md](/Users/len/Desktop/project/k8s/kubernetes/README.md)
 
 선언형 배포 진입점은 아래 순서를 기본으로 한다.

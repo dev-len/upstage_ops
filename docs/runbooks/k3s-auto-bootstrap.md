@@ -20,8 +20,8 @@
 자동화 비대상:
 
 - 이미 실행 중인 기존 인스턴스
-- Helm chart 설치
-- observability / Langfuse workload 배포
+- Helm chart 설치 자체의 세부 구현
+- observability / Langfuse workload 배포의 Secret 입력 준비
 - evidence 후속 해석 자동화
 
 ## 2. 입력 변수와 기본값
@@ -54,6 +54,7 @@ k3s_bootstrap_token                       = "replace-me-with-a-shared-token"
 - Terraform이 bastion instance를 생성한다.
 - bastion `user_data`가 `/opt/k3s-bootstrap` 아래 helper를 설치한다.
 - helper는 EC2 `Name` 태그 기준으로 private node의 최신 private IP를 조회한다.
+- bastion SSH 데몬은 first-boot에 `bastion_ssh_port`로 맞춰진다.
 
 ### Server
 
@@ -129,12 +130,19 @@ server kubeconfig를 사용해 아래를 확인한다.
 bash scripts/phase3-verify.sh
 ```
 
+CloudShell 표준 경로에서는 아래 스크립트가 최대 20분 동안 전체 node `Ready`를 기다린다.
+
+```bash
+SSH_IDENTITY_FILE=~/.ssh/k3s-dev-key.pem bash scripts/cloudshell-k3s-check.sh
+```
+
 ### 기대 결과
 
 - bastion에 `/opt/k3s-bootstrap` 존재
 - 전체 node가 `Ready`
 - role label이 역할별로 일치
 - infra node taint가 적용
+- timeout 시 worker diagnostics가 저장되고 workload 단계는 중단됨
 
 ## 7. 흔한 실패 패턴
 
@@ -145,6 +153,9 @@ bash scripts/phase3-verify.sh
 - agent join 실패
   - server API 미응답
   - `k3s_bootstrap_token` 불일치
+- IP 변동
+  - EIP 미사용으로 bastion public IP와 node private IP가 바뀔 수 있음
+  - output 또는 AWS tag 조회로 최신 IP를 다시 확인해야 함
 - bastion helper 실패
   - AWS CLI 권한 부족
   - EC2 `Name` 태그 규칙 불일치

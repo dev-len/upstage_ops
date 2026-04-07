@@ -14,6 +14,7 @@ kubectl apply -k kubernetes/apps/sample-httpbin
 
 이 단계는 namespace, secret placeholder, NetworkPolicy, Helm values ConfigMap을 만든다.
 `kubernetes/platform/*/values/` 아래 파일은 `deployments/` values의 Kustomize-safe snapshot이다.
+실제 Secret은 Kustomize에 포함하지 않고, [secret-supply-contract.md](/Users/len/Desktop/project/k8s/docs/runbooks/secret-supply-contract.md)의 CloudShell 로컬 YAML 파일을 먼저 적용한다.
 
 ## 2. Helm values 확인
 
@@ -35,8 +36,17 @@ langfuse values:
 
 ## 3. Observability 배포
 
-실제 chart 이름은 운영자가 확정한 저장소 기준을 사용하되, 값 파일은 현재 저장소 자산을 우선한다.
-경로 확인이 필요하면 [`helm-rollout.sh`](/Users/len/Desktop/project/k8s/scripts/helm-rollout.sh)로 values 기준 경로를 확인한다.
+one-shot 기준 chart 계약은 아래로 고정한다.
+
+- Prometheus: `prometheus-community/prometheus`
+- Grafana: `grafana/grafana`
+- Loki: `grafana/loki`
+- Tempo: `grafana/tempo`
+- OpenTelemetry Collector: `open-telemetry/opentelemetry-collector`
+- Langfuse: `langfuse/langfuse`
+
+실제 install/upgrade는 [`helm-rollout.sh`](/Users/len/Desktop/project/k8s/scripts/helm-rollout.sh)와
+[`cloudshell-workload-rollout.sh`](/Users/len/Desktop/project/k8s/scripts/cloudshell-workload-rollout.sh)가 수행한다.
 
 최소 검증:
 
@@ -56,8 +66,7 @@ kubectl get svc -n monitoring
 
 ## 4. Langfuse 배포
 
-실제 chart install 전, 아래 secret 값을 실제 값으로 교체한다.
-Helm values 경로 확인은 동일하게 [`helm-rollout.sh`](/Users/len/Desktop/project/k8s/scripts/helm-rollout.sh)를 사용한다.
+실제 chart install 전, 아래 secret 값을 CloudShell 로컬 YAML로 준비해 `kubectl apply -f` 해야 한다.
 
 - `langfuse-app-secret`
 - `langfuse-db-secret`

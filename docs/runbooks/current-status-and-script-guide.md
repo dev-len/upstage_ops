@@ -14,14 +14,15 @@
 - `terragrunt output -json` 기준 bastion / node IP와 role 맵 확인
 - server node에서 K3S 설치 확인
 - server node에서 `kubectl get nodes` 기준 `server` 단독 `Ready` 확인
+- CloudShell one-shot 오케스트레이션 스크립트 추가
+- actual Secret YAML 계약과 one-shot runbook 추가
+- Kustomize 경로에서 placeholder Secret 제거
 
 ### 아직 미완료인 것
 
-- worker node 자동 join 확인
-- 전체 node `Ready` 상태 확인
-- bastion helper의 AWS credential 없는 운영 경로 정리
-- Phase 3 evidence의 실제 CloudShell 결과 저장
-- observability / Langfuse / sample app 배포
+- 실제 CloudShell one-shot E2E 실행 결과 저장
+- worker 전체 `Ready` 실측 확인
+- observability / Langfuse / sample app 실배포 결과 저장
 
 ## 2. 실패 이력과 원인
 
@@ -171,6 +172,34 @@
   - bastion 자체에 AWS credential이 없어도 동작한다
   - IP 변경 시 이 스크립트를 다시 실행해 wrapper를 갱신한다
 
+### `scripts/cloudshell-workload-rollout.sh`
+
+- 목적:
+  - K8S Secret 확인 후 platform/app apply와 Helm rollout 실행
+- 실행 위치:
+  - CloudShell, repo root
+- 고정 chart 계약:
+  - `grafana/grafana`
+  - `prometheus-community/prometheus`
+  - `grafana/loki`
+  - `grafana/tempo`
+  - `open-telemetry/opentelemetry-collector`
+  - `langfuse/langfuse`
+
+### `scripts/cloudshell-bootstrap-all.sh`
+
+- 목적:
+  - CloudShell에서 infra, K3S, Secret, workload, wrapper, evidence까지 one-shot 실행
+- 실행 위치:
+  - CloudShell, repo root
+- 전제:
+  - `terragrunt/dev/inputs.hcl`
+  - `.cloudshell/secrets/*.yaml`
+  - `SSH_IDENTITY_FILE`
+- 예외 처리:
+  - IP 재해석은 `terragrunt output` 우선, AWS tag 조회 fallback
+  - worker 전체가 `Ready`가 아니면 workload 단계로 가지 않음
+
 ### `scripts/capture-phase-evidence.sh`
 
 - 목적:
@@ -193,13 +222,9 @@ CloudShell 기준 권장 순서는 아래다.
 
 1. `git pull`
 2. `terragrunt/dev/inputs.hcl` 확인
-3. `bash scripts/cloudshell-plan.sh`
-4. `bash scripts/cloudshell-replace-apply.sh`
-5. `bash scripts/sync-bastion-wrappers.sh`
-6. bastion 접속 후 `~/bin/server.sh` 또는 `~/bin/app-1.sh` 사용
-7. server에서 `sudo k3s kubectl get nodes -o wide`
-8. server에서 `sudo k3s kubectl get nodes --show-labels`
-9. 필요 시 `bash scripts/phase3-verify.sh`
+3. `.cloudshell/secrets/*.yaml` 준비
+4. `SSH_IDENTITY_FILE=~/.ssh/k3s-dev-key.pem bash scripts/cloudshell-bootstrap-all.sh`
+5. 필요 시 `bash scripts/phase3-verify.sh`
 
 ## 5. 다음 진단 포인트
 

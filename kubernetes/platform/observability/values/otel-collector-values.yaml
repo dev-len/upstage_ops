@@ -11,7 +11,7 @@ config:
         - /var/log/pods/*/*/*.log
   exporters:
     loki:
-      endpoint: http://loki-gateway.logging.svc.cluster.local/loki/api/v1/push
+      endpoint: http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push
     otlp/tempo:
       endpoint: tempo.monitoring.svc.cluster.local:4317
       tls:
