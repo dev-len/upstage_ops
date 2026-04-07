@@ -32,44 +32,24 @@ locals {
     var.manage_existing_bastion_ssh_ingress_rules
   )
 
-  existing_bastion_has_admin_ssh = local.manage_existing_bastion_ingress ? anytrue([
-    for rule in data.aws_security_group.existing_bastion[0].ingress :
-    rule.from_port == var.bastion_ssh_port &&
-    rule.to_port == var.bastion_ssh_port &&
-    rule.protocol == "tcp" &&
-    contains(try(rule.cidr_blocks, []), var.admin_cidr)
-  ]) : false
-
-  existing_server_has_bastion_ssh = local.manage_existing_bastion_ingress ? anytrue([
-    for rule in data.aws_security_group.existing_server[0].ingress :
-    rule.from_port == 22 &&
-    rule.to_port == 22 &&
-    rule.protocol == "tcp" &&
-    contains(try(rule.security_groups, []), var.existing_bastion_security_group_id)
-  ]) : false
-
-  existing_worker_has_bastion_ssh = local.manage_existing_bastion_ingress ? anytrue([
-    for rule in data.aws_security_group.existing_worker[0].ingress :
-    rule.from_port == 22 &&
-    rule.to_port == 22 &&
-    rule.protocol == "tcp" &&
-    contains(try(rule.security_groups, []), var.existing_bastion_security_group_id)
-  ]) : false
+  existing_bastion_has_admin_ssh  = local.manage_existing_bastion_ingress ? data.external.existing_sg_rule_status[0].result.bastion_has_admin_ssh == "true" : false
+  existing_server_has_bastion_ssh = local.manage_existing_bastion_ingress ? data.external.existing_sg_rule_status[0].result.server_has_bastion_ssh == "true" : false
+  existing_worker_has_bastion_ssh = local.manage_existing_bastion_ingress ? data.external.existing_sg_rule_status[0].result.worker_has_bastion_ssh == "true" : false
 }
 
-data "aws_security_group" "existing_server" {
-  count = local.use_existing_security_groups ? 1 : 0
-  id    = var.existing_server_security_group_id
-}
+data "external" "existing_sg_rule_status" {
+  count = local.manage_existing_bastion_ingress ? 1 : 0
 
-data "aws_security_group" "existing_worker" {
-  count = local.use_existing_security_groups ? 1 : 0
-  id    = var.existing_worker_shared_security_group_id
-}
+  program = ["bash", "${path.module}/scripts/check-existing-sg-rules.sh"]
 
-data "aws_security_group" "existing_bastion" {
-  count = local.use_existing_bastion_security_group ? 1 : 0
-  id    = var.existing_bastion_security_group_id
+  query = {
+    aws_region    = var.aws_region
+    admin_cidr    = var.admin_cidr
+    bastion_port  = tostring(var.bastion_ssh_port)
+    bastion_sg_id = var.existing_bastion_security_group_id
+    server_sg_id  = var.existing_server_security_group_id
+    worker_sg_id  = var.existing_worker_shared_security_group_id
+  }
 }
 
 check "security_group_override_pair" {
