@@ -35,6 +35,11 @@ locals {
   existing_bastion_has_admin_ssh  = local.manage_existing_bastion_ingress ? data.external.existing_sg_rule_status[0].result.bastion_has_admin_ssh == "true" : false
   existing_server_has_bastion_ssh = local.manage_existing_bastion_ingress ? data.external.existing_sg_rule_status[0].result.server_has_bastion_ssh == "true" : false
   existing_worker_has_bastion_ssh = local.manage_existing_bastion_ingress ? data.external.existing_sg_rule_status[0].result.worker_has_bastion_ssh == "true" : false
+  bastion_node_authorized_key = (
+    var.enable_bastion &&
+    var.bootstrap_bastion_helpers &&
+    length(tls_private_key.bastion_node_access) > 0
+  ) ? tls_private_key.bastion_node_access[0].public_key_openssh : ""
 }
 
 data "external" "existing_sg_rule_status" {
@@ -99,7 +104,7 @@ module "k3s_nodes" {
   server_security_group_id        = local.use_existing_security_groups ? var.existing_server_security_group_id : module.security_groups[0].server_security_group_id
   worker_shared_security_group_id = local.use_existing_security_groups ? var.existing_worker_shared_security_group_id : module.security_groups[0].worker_shared_security_group_id
   node_definitions                = local.effective_node_definitions
-  bastion_node_authorized_key     = var.enable_bastion && var.bootstrap_bastion_helpers ? tls_private_key.bastion_node_access[0].public_key_openssh : ""
+  bastion_node_authorized_key     = local.bastion_node_authorized_key
   k3s_bootstrap_token             = var.k3s_bootstrap_token
   k3s_server_extra_args           = var.k3s_server_extra_args
   k3s_agent_extra_args_by_role    = var.k3s_agent_extra_args_by_role
@@ -180,7 +185,7 @@ resource "aws_instance" "bastion" {
     cluster_prefix            = var.name_prefix
     bastion_ssh_port          = var.bastion_ssh_port
     bootstrap_bastion_helpers = var.bootstrap_bastion_helpers
-    bastion_node_private_key  = var.bootstrap_bastion_helpers ? tls_private_key.bastion_node_access[0].private_key_openssh : ""
+    bastion_node_private_key  = length(tls_private_key.bastion_node_access) > 0 ? tls_private_key.bastion_node_access[0].private_key_openssh : ""
   })
 
   lifecycle {

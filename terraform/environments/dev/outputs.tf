@@ -86,16 +86,16 @@ output "k3s_server_endpoint" {
 }
 
 output "bastion_instance_id" {
-  value       = var.enable_bastion ? aws_instance.bastion[0].id : null
+  value       = try(aws_instance.bastion[0].id, null)
   description = "EC2 instance ID for the bastion host."
 }
 
 output "bastion_private_ip" {
-  value       = var.enable_bastion ? aws_instance.bastion[0].private_ip : null
+  value       = try(aws_instance.bastion[0].private_ip, null)
   description = "Private IPv4 address for the bastion host."
 }
 
 output "bastion_public_ip" {
-  value       = var.enable_bastion ? aws_instance.bastion[0].public_ip : null
+  value       = try(aws_instance.bastion[0].public_ip, null)
   description = "Public IPv4 address for the bastion host."
 }
