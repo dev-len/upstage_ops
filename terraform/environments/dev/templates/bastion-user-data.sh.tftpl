@@ -9,6 +9,22 @@ if command -v apt-get >/dev/null 2>&1; then
   apt-get install -y awscli curl
 fi
 
+install -d -m 0755 /etc/ssh/sshd_config.d
+
+cat >/etc/ssh/sshd_config.d/60-bastion-port.conf <<'SCRIPT'
+Port ${bastion_ssh_port}
+SCRIPT
+
+sshd -t
+if systemctl list-unit-files ssh.service >/dev/null 2>&1; then
+  systemctl restart ssh.service
+elif systemctl list-unit-files sshd.service >/dev/null 2>&1; then
+  systemctl restart sshd.service
+else
+  service ssh restart || service sshd restart
+fi
+
+%{ if bootstrap_bastion_helpers ~}
 install -d -m 0755 /opt/k3s-bootstrap
 
 cat >/opt/k3s-bootstrap/connect-node.sh <<'SCRIPT'
@@ -82,3 +98,4 @@ export CLUSTER_PREFIX="${cluster_prefix}"
 export BASTION_SSH_PORT="${bastion_ssh_port}"
 alias k3s-bootstrap='cd /opt/k3s-bootstrap'
 SCRIPT
+%{ endif ~}

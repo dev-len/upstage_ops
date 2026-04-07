@@ -126,11 +126,12 @@ resource "aws_instance" "bastion" {
     encrypted   = true
   }
 
-  user_data = var.bootstrap_bastion_helpers ? templatefile("${path.module}/templates/bastion-user-data.sh.tftpl", {
-    aws_region       = var.aws_region
-    cluster_prefix   = var.name_prefix
-    bastion_ssh_port = var.bastion_ssh_port
-  }) : null
+  user_data = templatefile("${path.module}/templates/bastion-user-data.sh.tftpl", {
+    aws_region                = var.aws_region
+    cluster_prefix            = var.name_prefix
+    bastion_ssh_port          = var.bastion_ssh_port
+    bootstrap_bastion_helpers = var.bootstrap_bastion_helpers
+  })
 
   lifecycle {
     ignore_changes = [

@@ -179,6 +179,8 @@ k3s_bootstrap_token       = "replace-me-with-a-shared-token"
 - bastion은 첫 부팅에서 `/opt/k3s-bootstrap` 아래 helper를 자동 설치한다
 - server/worker node는 첫 부팅에서 K3S를 자동 설치한다
 
+`enable_bastion = true`이면 bastion 인스턴스는 first-boot `user_data`에서 SSH 데몬 포트를 `bastion_ssh_port` 값으로 맞춘다. 기본값은 `22022`다.
+
 주의:
 
 - 이미 떠 있는 인스턴스는 `user_data`를 다시 실행하지 않는다
