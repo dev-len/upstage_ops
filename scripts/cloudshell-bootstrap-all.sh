@@ -91,7 +91,7 @@ write_summary() {
     echo
     echo "## Step Status"
     while IFS=$'\t' read -r step state; do
-      printf -- "- `%s`: `%s`\n" "$step" "$state"
+      printf -- '- `%s`: `%s`\n' "$step" "$state"
     done <"$STATUS_FILE"
   } >"$SUMMARY_FILE"
 }

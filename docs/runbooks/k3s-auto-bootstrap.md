@@ -36,14 +36,15 @@
   - server install 추가 인자
 - `k3s_agent_extra_args_by_role = {}`
   - 역할별 agent install 추가 인자
-- `manage_existing_bastion_ssh_ingress_rules = false`
+- `manage_existing_bastion_ssh_ingress_rules = true`
+  - 기존 SG를 주입해도 Terraform이 현재 ingress를 검사하고 누락된 bastion/admin SSH 규칙만 추가한다
   - 기존 SG 주입 경로에서 duplicate SSH rule 회피
 
 권장 기본값:
 
 ```hcl
 bootstrap_bastion_helpers                 = true
-manage_existing_bastion_ssh_ingress_rules = false
+manage_existing_bastion_ssh_ingress_rules = true
 k3s_bootstrap_token                       = "replace-me-with-a-shared-token"
 ```
 
@@ -110,7 +111,7 @@ bash scripts/cloudshell-replace-apply.sh
 기존 SG 주입 경로에서는 아래를 유지한다.
 
 ```hcl
-manage_existing_bastion_ssh_ingress_rules = false
+manage_existing_bastion_ssh_ingress_rules = true
 ```
 
 ## 6. Apply 후 검증

@@ -12,7 +12,7 @@ inputs = {
   # existing_server_security_group_id        = "sg-xxxxxxxxxxxxxxxxx"
   # existing_worker_shared_security_group_id = "sg-xxxxxxxxxxxxxxxxx"
   # existing_bastion_security_group_id       = "sg-xxxxxxxxxxxxxxxxx"
-  # manage_existing_bastion_ssh_ingress_rules = false
+  manage_existing_bastion_ssh_ingress_rules = true
 
   bootstrap_bastion_helpers = true
   # Set this to enable first-boot K3S automation. Existing running instances

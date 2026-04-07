@@ -35,7 +35,8 @@
 - 원인:
   - 기존 SG에 이미 `bastion -> server/worker : 22/tcp` 규칙이 있는데 Terraform이 다시 생성 시도
 - 조치:
-  - `manage_existing_bastion_ssh_ingress_rules = false`
+  - 현재 기준 기본값은 `manage_existing_bastion_ssh_ingress_rules = true`
+  - Terraform이 injected SG ingress를 읽어 누락된 bastion/admin SSH 규칙만 추가한다
 
 ### bastion helper 미설치 / 미반영
 

@@ -26,6 +26,50 @@ locals {
       } : {}
     )
   }
+
+  manage_existing_bastion_ingress = (
+    local.use_existing_bastion_security_group &&
+    var.manage_existing_bastion_ssh_ingress_rules
+  )
+
+  existing_bastion_has_admin_ssh = local.manage_existing_bastion_ingress ? anytrue([
+    for rule in data.aws_security_group.existing_bastion[0].ingress :
+    rule.from_port == var.bastion_ssh_port &&
+    rule.to_port == var.bastion_ssh_port &&
+    rule.protocol == "tcp" &&
+    contains(try(rule.cidr_blocks, []), var.admin_cidr)
+  ]) : false
+
+  existing_server_has_bastion_ssh = local.manage_existing_bastion_ingress ? anytrue([
+    for rule in data.aws_security_group.existing_server[0].ingress :
+    rule.from_port == 22 &&
+    rule.to_port == 22 &&
+    rule.protocol == "tcp" &&
+    contains(try(rule.security_groups, []), var.existing_bastion_security_group_id)
+  ]) : false
+
+  existing_worker_has_bastion_ssh = local.manage_existing_bastion_ingress ? anytrue([
+    for rule in data.aws_security_group.existing_worker[0].ingress :
+    rule.from_port == 22 &&
+    rule.to_port == 22 &&
+    rule.protocol == "tcp" &&
+    contains(try(rule.security_groups, []), var.existing_bastion_security_group_id)
+  ]) : false
+}
+
+data "aws_security_group" "existing_server" {
+  count = local.use_existing_security_groups ? 1 : 0
+  id    = var.existing_server_security_group_id
+}
+
+data "aws_security_group" "existing_worker" {
+  count = local.use_existing_security_groups ? 1 : 0
+  id    = var.existing_worker_shared_security_group_id
+}
+
+data "aws_security_group" "existing_bastion" {
+  count = local.use_existing_bastion_security_group ? 1 : 0
+  id    = var.existing_bastion_security_group_id
 }
 
 check "security_group_override_pair" {
@@ -82,8 +126,8 @@ module "k3s_nodes" {
 
 resource "aws_vpc_security_group_ingress_rule" "existing_server_ssh_from_bastion" {
   count = (
-    local.use_existing_bastion_security_group &&
-    var.manage_existing_bastion_ssh_ingress_rules
+    local.manage_existing_bastion_ingress &&
+    !local.existing_server_has_bastion_ssh
   ) ? 1 : 0
 
   security_group_id            = var.existing_server_security_group_id
@@ -96,8 +140,8 @@ resource "aws_vpc_security_group_ingress_rule" "existing_server_ssh_from_bastion
 
 resource "aws_vpc_security_group_ingress_rule" "existing_worker_ssh_from_bastion" {
   count = (
-    local.use_existing_bastion_security_group &&
-    var.manage_existing_bastion_ssh_ingress_rules
+    local.manage_existing_bastion_ingress &&
+    !local.existing_worker_has_bastion_ssh
   ) ? 1 : 0
 
   security_group_id            = var.existing_worker_shared_security_group_id
@@ -106,6 +150,20 @@ resource "aws_vpc_security_group_ingress_rule" "existing_worker_ssh_from_bastion
   to_port                      = 22
   ip_protocol                  = "tcp"
   description                  = "SSH from bastion"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "existing_bastion_ssh_from_admin" {
+  count = (
+    local.manage_existing_bastion_ingress &&
+    !local.existing_bastion_has_admin_ssh
+  ) ? 1 : 0
+
+  security_group_id = var.existing_bastion_security_group_id
+  cidr_ipv4         = var.admin_cidr
+  from_port         = var.bastion_ssh_port
+  to_port           = var.bastion_ssh_port
+  ip_protocol       = "tcp"
+  description       = "SSH from admin"
 }
 
 resource "aws_instance" "bastion" {

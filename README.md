@@ -160,7 +160,7 @@
     existing_server_security_group_id        = "sg-xxxxxxxxxxxxxxxxx"
     existing_worker_shared_security_group_id = "sg-xxxxxxxxxxxxxxxxx"
     existing_bastion_security_group_id       = "sg-xxxxxxxxxxxxxxxxx"
-    manage_existing_bastion_ssh_ingress_rules = false
+    manage_existing_bastion_ssh_ingress_rules = true
     associate_public_ip_address              = false
     enable_bastion                           = true
     enable_storage                           = false
@@ -210,7 +210,7 @@ k3s_bootstrap_token       = "replace-me-with-a-shared-token"
 - 현재 학습 계정에서는 `ec2:CreateVolume`도 불가하므로, 별도 EBS 대신 stateful 노드의 root volume 확장 경로를 사용한다
 - bastion을 제외한 private fleet는 public IP 없이 운영하는 것을 기본으로 둔다
 - bastion 외부 진입 포트만 `22022`로 바꾸고, private 노드 SSH는 `22`로 유지할 수 있다
-- 기존 SG에 이미 `bastion -> server/worker : 22/tcp` 규칙이 있으면 `manage_existing_bastion_ssh_ingress_rules = false`로 두어 duplicate rule 에러를 피한다
+- 기존 SG 주입 경로에서는 `manage_existing_bastion_ssh_ingress_rules = true`를 기본으로 두고, Terraform이 현재 ingress를 읽어 누락된 bastion/admin SSH 규칙만 보완하게 한다
 - EIP를 사용하지 않으므로 bastion public IP와 node private IP는 apply 후 변동될 수 있다
 - IP는 고정값으로 메모하지 말고, `terragrunt output` 또는 AWS tag 조회로 매 실행 다시 해석한다
 - 기본 state 전략은 CloudShell local state이며, 세션 손실 후에는 AWS tag 조회 fallback을 사용한다

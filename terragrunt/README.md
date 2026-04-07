@@ -16,8 +16,8 @@ This directory is the environment entrypoint layer for Terraform modules in [ter
 1. Copy `dev/inputs.hcl.example` to `dev/inputs.hcl`.
 2. Fill in the real `vpc_id`, `admin_cidr`, `subnet_ids_by_az`, `ami_id`, and `key_name`.
    - If the account cannot create bootstrap security groups, pre-create them and set `existing_server_security_group_id`, `existing_worker_shared_security_group_id`, and `existing_bastion_security_group_id`.
-   - If those existing security groups already include `bastion -> server/worker : 22/tcp`, keep `manage_existing_bastion_ssh_ingress_rules = false` so Terraform does not try to create duplicate rules.
-   - Set `manage_existing_bastion_ssh_ingress_rules = true` only when Terraform should add the bastion-to-node SSH ingress rules itself.
+   - `manage_existing_bastion_ssh_ingress_rules = true` is the default. Terraform reads the injected SGs and adds only the missing SSH rules instead of duplicating existing ones.
+   - Set `manage_existing_bastion_ssh_ingress_rules = false` only when you intentionally want Terraform to skip bastion/admin SSH ingress repair on existing SGs.
    - CloudShell example:
      ```bash
      SERVER_SG_ID=$(aws ec2 create-security-group \
@@ -39,7 +39,7 @@ This directory is the environment entrypoint layer for Terraform modules in [ter
      ```hcl
      existing_server_security_group_id        = "sg-xxxxxxxxxxxxxxxxx"
      existing_worker_shared_security_group_id = "sg-xxxxxxxxxxxxxxxxx"
-     manage_existing_bastion_ssh_ingress_rules = false
+     manage_existing_bastion_ssh_ingress_rules = true
      ```
 3. Review bootstrap-first baseline inputs:
    - `enable_bastion`
@@ -82,7 +82,7 @@ This directory is the environment entrypoint layer for Terraform modules in [ter
 - In CloudShell, prefer `TG_DOWNLOAD_DIR` over deprecated `TERRAGRUNT_DOWNLOAD`.
 - In the training account, bootstrap security-group outbound must be left unmanaged because any Terraform-managed egress update triggers `ec2:RevokeSecurityGroupEgress`, which is denied by policy.
 - The bootstrap SG module therefore ignores `egress` drift on create/update and only manages ingress rules when SGs are Terraform-managed.
-- For the learning-account override path, use a manually created bastion SG and let Terraform manage the bastion instance plus bastion->node SSH ingress rules.
+- For the learning-account override path, use a manually created bastion SG and let Terraform validate injected SG ingress, then create only the missing bastion/admin SSH rules.
 - When `bootstrap_bastion_helpers = true`, the bastion installs helper scripts under `/opt/k3s-bootstrap` on first boot.
 - When `k3s_bootstrap_token` is set, the server and agent nodes install K3S automatically on first boot using role-aware labels and taints.
 - Existing running instances do not re-run `user_data`; recreate or replace them if you want to apply the new bootstrap automation to instances that already exist.
