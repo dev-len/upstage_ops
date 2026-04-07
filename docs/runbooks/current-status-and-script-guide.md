@@ -47,6 +47,16 @@
 - 조치:
   - bastion은 `-replace='aws_instance.bastion[0]'` 필요
 
+### bastion helper 인증 누락
+
+- 증상:
+  - bastion에서 `server.sh` 또는 `connect-node.sh` 실행 시 `Permission denied (publickey)`
+- 원인:
+  - helper 스크립트는 설치됐지만 private node 접속용 SSH key가 bootstrap 계약에 포함되지 않음
+- 조치:
+  - bastion first-boot에서 `/opt/k3s-bootstrap/id_bastion_nodes`를 설치
+  - server/worker first-boot에서 같은 공개키를 `ubuntu`의 `authorized_keys`에 주입
+
 ### templatefile 파싱 오류
 
 - 증상:
@@ -92,11 +102,10 @@
 - 원인:
   - bastion 외부 포트는 `22022`
   - PEM 권한이 `0644`
-  - bastion에 key가 없음
 - 조치:
   - `chmod 600`
   - `-p 22022`
-  - 필요 시 bastion에 PEM 복사
+  - CloudShell PEM은 bastion 접속까지만 필요하고, bastion 내부 private node 접속은 bootstrap-managed key를 기본 사용
 
 ### server만 Ready, worker 미join
 
@@ -171,7 +180,8 @@
   - 기타 node별 wrapper
 - 주의:
   - bastion 자체에 AWS credential이 없어도 동작한다
-  - IP 변경 시 이 스크립트를 다시 실행해 wrapper를 갱신한다
+  - wrapper는 고정 IP 대신 `/opt/k3s-bootstrap/connect-node.sh <logical-name>`를 호출한다
+  - node 재생성으로 private IP가 바뀌어도 wrapper 이름 계약은 그대로 유지된다
 
 ### `scripts/cloudshell-workload-rollout.sh`
 

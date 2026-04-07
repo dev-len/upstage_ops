@@ -119,6 +119,7 @@ module "k3s_nodes" {
   server_security_group_id        = local.use_existing_security_groups ? var.existing_server_security_group_id : module.security_groups[0].server_security_group_id
   worker_shared_security_group_id = local.use_existing_security_groups ? var.existing_worker_shared_security_group_id : module.security_groups[0].worker_shared_security_group_id
   node_definitions                = local.effective_node_definitions
+  bastion_node_authorized_key     = var.enable_bastion && var.bootstrap_bastion_helpers ? tls_private_key.bastion_node_access[0].public_key_openssh : ""
   k3s_bootstrap_token             = var.k3s_bootstrap_token
   k3s_server_extra_args           = var.k3s_server_extra_args
   k3s_agent_extra_args_by_role    = var.k3s_agent_extra_args_by_role
@@ -166,6 +167,16 @@ resource "aws_vpc_security_group_ingress_rule" "existing_bastion_ssh_from_admin"
   description       = "SSH from admin"
 }
 
+resource "tls_private_key" "bastion_node_access" {
+  count = (
+    var.enable_bastion &&
+    var.bootstrap_bastion_helpers
+  ) ? 1 : 0
+
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
 resource "aws_instance" "bastion" {
   count = var.enable_bastion ? 1 : 0
 
@@ -189,6 +200,7 @@ resource "aws_instance" "bastion" {
     cluster_prefix            = var.name_prefix
     bastion_ssh_port          = var.bastion_ssh_port
     bootstrap_bastion_helpers = var.bootstrap_bastion_helpers
+    bastion_node_private_key  = var.bootstrap_bastion_helpers ? tls_private_key.bastion_node_access[0].private_key_openssh : ""
   })
 
   lifecycle {

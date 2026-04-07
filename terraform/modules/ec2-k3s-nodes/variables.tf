@@ -150,6 +150,12 @@ variable "k3s_agent_extra_args_by_role" {
   default     = {}
 }
 
+variable "bastion_node_authorized_key" {
+  description = "Optional SSH public key injected into nodes so bastion helpers can access the private fleet without manual PEM copy."
+  type        = string
+  default     = ""
+}
+
 variable "node_definitions" {
   description = "Role-aware node definitions keyed by logical node name."
   type = map(object({

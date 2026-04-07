@@ -26,6 +26,13 @@ fi
 
 %{ if bootstrap_bastion_helpers ~}
 install -d -m 0755 /opt/k3s-bootstrap
+install -d -m 0700 /home/ubuntu/.ssh
+
+cat >/opt/k3s-bootstrap/id_bastion_nodes <<'SCRIPT'
+${bastion_node_private_key}
+SCRIPT
+chmod 0600 /opt/k3s-bootstrap/id_bastion_nodes
+chown ubuntu:ubuntu /opt/k3s-bootstrap/id_bastion_nodes
 
 cat >/opt/k3s-bootstrap/connect-node.sh <<'SCRIPT'
 #!/usr/bin/env bash
@@ -43,7 +50,8 @@ readonly AWS_REGION="$${AWS_REGION:-${aws_region}}"
 readonly CLUSTER_PREFIX="$${CLUSTER_PREFIX:-${cluster_prefix}}"
 readonly SSH_USER="$${SSH_USER:-ubuntu}"
 readonly SSH_PORT="$${SSH_PORT:-22}"
-readonly SSH_IDENTITY_FILE="$${SSH_IDENTITY_FILE:-}"
+readonly DEFAULT_SSH_IDENTITY_FILE="/opt/k3s-bootstrap/id_bastion_nodes"
+readonly SSH_IDENTITY_FILE="$${SSH_IDENTITY_FILE:-$${DEFAULT_SSH_IDENTITY_FILE}}"
 readonly SSH_EXTRA_ARGS="$${SSH_EXTRA_ARGS:-}"
 readonly INSTANCE_NAME_TAG="$${CLUSTER_PREFIX}-$${NODE_NAME}"
 
@@ -96,6 +104,7 @@ cat >/etc/profile.d/k3s-bootstrap.sh <<'SCRIPT'
 export AWS_REGION="${aws_region}"
 export CLUSTER_PREFIX="${cluster_prefix}"
 export BASTION_SSH_PORT="${bastion_ssh_port}"
+export BASTION_NODE_IDENTITY_FILE="/opt/k3s-bootstrap/id_bastion_nodes"
 alias k3s-bootstrap='cd /opt/k3s-bootstrap'
 SCRIPT
 %{ endif ~}

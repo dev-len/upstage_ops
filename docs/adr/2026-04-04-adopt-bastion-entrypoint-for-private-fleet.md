@@ -25,6 +25,7 @@ private fleet 운영을 위한 표준 진입점으로 bastion host를 채택한�
 3. 나머지 K3S fleet는 private-only 운영을 기본으로 둔다
 4. 운영/부트스트랩 경로는 `local/CloudShell -> bastion -> private nodes`로 고정한다
 5. bastion 안의 접속 helper는 고정 private IP를 사용하지 않고, EC2 `Name` 태그로 최신 private IP를 조회한 뒤 SSH한다
+6. bastion helper가 private node에 실제로 접속할 수 있도록 bastion-to-node 전용 SSH key는 bootstrap 계약에 포함한다
 
 이를 위해 bastion 관련 출력과 helper 스크립트를 함께 제공한다.
 
@@ -65,11 +66,13 @@ private fleet 운영을 위한 표준 진입점으로 bastion host를 채택한�
 
 - bastion SG와 private node SG 간 SSH 규칙이 누락되면 운영 진입점이 막힌다
 - EC2 `Name` 태그 규칙이 깨지면 helper 스크립트가 대상 노드를 찾지 못한다
+- bastion에 private node 접속용 SSH 자격증명이 없으면 helper 설치만으로는 운영 경로가 완성되지 않는다
 
 ### 완화책
 
 - bastion SG와 `bastion -> server/worker:22` 규칙을 Terraform 계약에 포함한다
 - helper 스크립트는 `Name = ${CLUSTER_PREFIX}-${NODE_NAME}` 규칙을 source of truth로 사용한다
+- bastion은 `/opt/k3s-bootstrap/id_bastion_nodes` 기본 key로 private node에 접속하고, node는 같은 공개키를 `authorized_keys`에 가진다
 - 문서와 입력 예시에 bastion을 기본 진입 경계로 명시한다
 
 ## 참고 (References)

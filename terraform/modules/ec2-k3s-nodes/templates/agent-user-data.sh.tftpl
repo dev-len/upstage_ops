@@ -9,6 +9,17 @@ if command -v apt-get >/dev/null 2>&1; then
   apt-get install -y curl
 fi
 
+install -d -m 0700 /home/ubuntu/.ssh
+touch /home/ubuntu/.ssh/authorized_keys
+chmod 0600 /home/ubuntu/.ssh/authorized_keys
+chown -R ubuntu:ubuntu /home/ubuntu/.ssh
+
+if [[ -n '${authorized_key}' ]]; then
+  if ! grep -Fxq '${authorized_key}' /home/ubuntu/.ssh/authorized_keys; then
+    printf '%s\n' '${authorized_key}' >> /home/ubuntu/.ssh/authorized_keys
+  fi
+fi
+
 cat >/usr/local/bin/bootstrap-k3s-agent.sh <<'SCRIPT'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -43,10 +54,12 @@ SCRIPT
 
 chmod +x /usr/local/bin/bootstrap-k3s-agent.sh
 
-K3S_SERVER_HOST='${k3s_server_host}' \
-K3S_TOKEN='${k3s_token}' \
-K3S_NODE_NAME='${k3s_node_name}' \
-K3S_NODE_LABELS='${k3s_node_labels}' \
-K3S_NODE_TAINTS='${k3s_node_taints}' \
-K3S_AGENT_ARGS='${k3s_agent_args}' \
-/usr/local/bin/bootstrap-k3s-agent.sh
+if [[ -n '${k3s_token}' ]]; then
+  K3S_SERVER_HOST='${k3s_server_host}' \
+  K3S_TOKEN='${k3s_token}' \
+  K3S_NODE_NAME='${k3s_node_name}' \
+  K3S_NODE_LABELS='${k3s_node_labels}' \
+  K3S_NODE_TAINTS='${k3s_node_taints}' \
+  K3S_AGENT_ARGS='${k3s_agent_args}' \
+  /usr/local/bin/bootstrap-k3s-agent.sh
+fi

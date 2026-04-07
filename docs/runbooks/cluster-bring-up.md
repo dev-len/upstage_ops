@@ -62,14 +62,17 @@ SSH_IDENTITY_FILE=~/.ssh/k3s-dev-key.pem bash scripts/cloudshell-bootstrap-all.s
 
 1. bastion에 접속한다.
 2. `/opt/k3s-bootstrap` helper 경로를 확인한다.
-3. server kubeconfig 기준으로 `kubectl get nodes`를 확인한다.
-4. 필요하면 evidence 파일을 저장한다.
+3. helper 기본 SSH key 경로를 확인하고, bastion에서 server helper가 실제로 동작하는지 본다.
+4. server kubeconfig 기준으로 `kubectl get nodes`를 확인한다.
+5. 필요하면 evidence 파일을 저장한다.
 
 자동화 경로 확인:
 
 ```bash
 ssh -p 22022 ubuntu@${BASTION_PUBLIC_IP}
 ls -la /opt/k3s-bootstrap
+ls -l /opt/k3s-bootstrap/id_bastion_nodes
+/opt/k3s-bootstrap/server.sh 'hostname && sudo systemctl is-active k3s'
 ```
 
 전체 node 교체 적용은 아래 스크립트를 기본으로 사용한다.

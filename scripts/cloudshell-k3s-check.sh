@@ -81,18 +81,32 @@ collect_worker_diagnostics() {
       continue
     fi
 
-    ssh "${server_ssh_args[@]}" "${SERVER_SSH_USER}@${private_ip}" \
-      "{
-        echo '=== systemctl ===';
-        sudo systemctl status k3s-agent --no-pager || true;
-        echo;
-        echo '=== journalctl ===';
-        sudo journalctl -u k3s-agent -n 200 --no-pager || true;
-        echo;
-        echo '=== cloud-init-output ===';
-        sudo tail -n 200 /var/log/cloud-init-output.log || true;
-      }" >"${EVIDENCE_DIR}/worker-diagnostics-${logical_name}.txt" 2>&1 || true
+    run_bastion_node_command "$logical_name" "{
+      echo '=== systemctl ===';
+      sudo systemctl status k3s-agent --no-pager || true;
+      echo;
+      echo '=== journalctl ===';
+      sudo journalctl -u k3s-agent -n 200 --no-pager || true;
+      echo;
+      echo '=== cloud-init-output ===';
+      sudo tail -n 200 /var/log/cloud-init-output.log || true;
+    }" >"${EVIDENCE_DIR}/worker-diagnostics-${logical_name}.txt" 2>&1 || true
   done < <(printf '%s\n' "$node_map_json" | jq -r 'to_entries[] | [.key, .value] | @tsv')
+}
+
+run_bastion_command() {
+  local remote_command="$1"
+
+  ssh "${ssh_base_args[@]}" -p "$EFFECTIVE_SSH_PORT" "$bastion_target" "$remote_command"
+}
+
+run_bastion_node_command() {
+  local logical_name="$1"
+  local remote_command="$2"
+  local escaped_remote_command
+  printf -v escaped_remote_command '%q' "$remote_command"
+
+  run_bastion_command "AWS_REGION='${AWS_REGION}' CLUSTER_PREFIX='${CLUSTER_PREFIX}' /opt/k3s-bootstrap/connect-node.sh '${logical_name}' ${escaped_remote_command}"
 }
 
 require_cmd terragrunt
@@ -216,15 +230,10 @@ bastion_target="${SSH_USER}@${BASTION_PUBLIC_IP}"
 ssh "${ssh_base_args[@]}" -p "$EFFECTIVE_SSH_PORT" "$bastion_target" \
   "ls -la /opt/k3s-bootstrap" | tee "${EVIDENCE_DIR}/phase3-bastion-helper-check.txt"
 
-declare -a server_ssh_args=(
-  "${ssh_base_args[@]}"
-  -J "${SSH_USER}@${BASTION_PUBLIC_IP}:${EFFECTIVE_SSH_PORT}"
-)
+run_bastion_node_command "server" "sudo systemctl is-active k3s" \
+  | tee "${EVIDENCE_DIR}/phase3-k3s-service-status.txt"
 
-ssh "${server_ssh_args[@]}" "${SERVER_SSH_USER}@${SERVER_PRIVATE_IP}" \
-  "sudo systemctl is-active k3s" | tee "${EVIDENCE_DIR}/phase3-k3s-service-status.txt"
-
-ssh "${server_ssh_args[@]}" "${SERVER_SSH_USER}@${SERVER_PRIVATE_IP}" \
+run_bastion_node_command "server" \
   "sudo test -f /etc/rancher/k3s/k3s.yaml && echo kubeconfig present: /etc/rancher/k3s/k3s.yaml" \
   | tee "${EVIDENCE_DIR}/phase3-server-kubeconfig-check.txt"
 
@@ -234,12 +243,10 @@ last_labels_output=""
 
 while (( SECONDS < ready_deadline )); do
   last_nodes_output="$(
-    ssh "${server_ssh_args[@]}" "${SERVER_SSH_USER}@${SERVER_PRIVATE_IP}" \
-      "sudo kubectl get nodes -o wide --no-headers" 2>/dev/null || true
+    run_bastion_node_command "server" "sudo k3s kubectl get nodes -o wide --no-headers" 2>/dev/null || true
   )"
   last_labels_output="$(
-    ssh "${server_ssh_args[@]}" "${SERVER_SSH_USER}@${SERVER_PRIVATE_IP}" \
-      "sudo kubectl get nodes --show-labels --no-headers" 2>/dev/null || true
+    run_bastion_node_command "server" "sudo k3s kubectl get nodes --show-labels --no-headers" 2>/dev/null || true
   )"
 
   printf '%s\n' "$last_nodes_output" >"${EVIDENCE_DIR}/phase3-kubectl-get-nodes.txt"

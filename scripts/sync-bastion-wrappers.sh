@@ -66,23 +66,14 @@ fi
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
 
-jq -r '.k3s_private_ips_by_name.value | to_entries[] | [.key, .value] | @tsv' "$OUTPUT_JSON" |
-while IFS=$'\t' read -r logical_name private_ip; do
+jq -r '.k3s_private_ips_by_name.value | keys[]' "$OUTPUT_JSON" |
+while IFS= read -r logical_name; do
   runtime_name="${logical_name//_/-}"
 
   cat >"${tmp_dir}/${logical_name}.sh" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
-ssh_args=()
-if [[ -n "\${SSH_IDENTITY_FILE:-}" ]]; then
-  ssh_args+=("-i" "\${SSH_IDENTITY_FILE}")
-fi
-if [[ -n "\${SSH_EXTRA_ARGS:-}" ]]; then
-  # shellcheck disable=SC2206
-  extra_args=( \${SSH_EXTRA_ARGS} )
-  ssh_args+=("\${extra_args[@]}")
-fi
-exec ssh "\${ssh_args[@]}" ${SSH_USER}@${private_ip} "\$@"
+exec /opt/k3s-bootstrap/connect-node.sh ${logical_name} "\$@"
 EOF
   chmod +x "${tmp_dir}/${logical_name}.sh"
 

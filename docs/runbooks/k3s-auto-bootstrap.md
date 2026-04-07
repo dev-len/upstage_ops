@@ -54,18 +54,22 @@ k3s_bootstrap_token                       = "replace-me-with-a-shared-token"
 
 - Terraform이 bastion instance를 생성한다.
 - bastion `user_data`가 `/opt/k3s-bootstrap` 아래 helper를 설치한다.
+- bastion `user_data`가 `/opt/k3s-bootstrap/id_bastion_nodes`에 private node 접속용 기본 SSH key를 설치한다.
 - helper는 EC2 `Name` 태그 기준으로 private node의 최신 private IP를 조회한다.
+- helper는 기본적으로 `/opt/k3s-bootstrap/id_bastion_nodes`를 사용해 private node에 접속한다.
 - bastion SSH 데몬은 first-boot에 `bastion_ssh_port`로 맞춰진다.
 
 ### Server
 
 - server node first boot에서 K3S server 설치가 실행된다.
+- server node first boot에서 bastion helper 공개키를 `ubuntu`의 `authorized_keys`에 추가한다.
 - `topology.k3s.io/role=server` label이 적용된다.
 - `k3s_server_extra_args`가 있으면 install 명령 뒤에 추가된다.
 
 ### Worker
 
 - worker node first boot에서 K3S agent 설치가 실행된다.
+- worker node first boot에서 bastion helper 공개키를 `ubuntu`의 `authorized_keys`에 추가한다.
 - agent는 server private IP 기준으로 API 응답을 기다린 뒤 join을 시도한다.
 - role별 label과 infra 전용 taint가 자동 적용된다.
 - Kubernetes runtime node name은 RFC 1123 규칙을 따르기 위해 logical name의 `_`를 `-`로 정규화해서 사용한다.
@@ -121,6 +125,8 @@ manage_existing_bastion_ssh_ingress_rules = true
 ```bash
 ssh -p 22022 ubuntu@${BASTION_PUBLIC_IP}
 ls -la /opt/k3s-bootstrap
+ls -l /opt/k3s-bootstrap/id_bastion_nodes
+/opt/k3s-bootstrap/server.sh hostname
 ```
 
 ### Node Ready 확인
@@ -140,6 +146,8 @@ SSH_IDENTITY_FILE=~/.ssh/k3s-dev-key.pem bash scripts/cloudshell-k3s-check.sh
 ### 기대 결과
 
 - bastion에 `/opt/k3s-bootstrap` 존재
+- bastion에 `/opt/k3s-bootstrap/id_bastion_nodes` 존재
+- bastion에서 `/opt/k3s-bootstrap/server.sh hostname`이 동작
 - 전체 node가 `Ready`
 - role label이 역할별로 일치
 - infra node taint가 적용
