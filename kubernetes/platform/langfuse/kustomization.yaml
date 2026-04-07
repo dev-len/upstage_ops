@@ -4,6 +4,9 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - networkpolicy.yaml
+  - postgresql.yaml
+  - redis.yaml
+  - clickhouse.yaml
 
 configMapGenerator:
   - name: langfuse-values

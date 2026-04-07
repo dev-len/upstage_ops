@@ -38,6 +38,18 @@ run_helm_target() {
   fi
 }
 
+wait_for_statefulset() {
+  local name="$1"
+  local namespace="$2"
+  local outfile="${EVIDENCE_DIR}/phase5-${name}-rollout.txt"
+
+  if ! kubectl rollout status "statefulset/${name}" -n "$namespace" --timeout="$KUBECTL_TIMEOUT" \
+    >"$outfile" 2>&1; then
+    capture_failure_context
+    exit 1
+  fi
+}
+
 require_cmd kubectl
 require_cmd helm
 
@@ -50,6 +62,10 @@ require_secret langfuse langfuse-clickhouse-secret
 kubectl apply -k kubernetes/platform/observability >"${EVIDENCE_DIR}/phase5-observability-kustomize.txt"
 kubectl apply -k kubernetes/platform/langfuse >"${EVIDENCE_DIR}/phase5-langfuse-kustomize.txt"
 kubectl apply -k kubernetes/apps/sample-httpbin >"${EVIDENCE_DIR}/phase5-sample-httpbin-apply.txt"
+
+wait_for_statefulset postgresql langfuse
+wait_for_statefulset redis langfuse
+wait_for_statefulset clickhouse langfuse
 
 run_helm_target prometheus
 run_helm_target grafana
